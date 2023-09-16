@@ -1,11 +1,11 @@
 OUT = bin/nl
 CC = cc
-CFLAGS =
+CFLAGS = -g -Wall
 ODIR = obj
 SDIR = src
 INC = -Iinc
 
-_OBJS = main.o stream.o
+_OBJS = main.o stream.o lexer.o
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 $(ODIR)/%.o: $(SDIR)/%.c
