@@ -12,7 +12,10 @@ typedef enum {
 	T_LP,
 	T_RP,
 	T_ID,
-	T_IF
+	T_NU,
+	T_IF,
+	T_TN,
+	T_EL
 } token_type;
 
 typedef struct {

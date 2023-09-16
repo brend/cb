@@ -44,6 +44,14 @@ char id_buffer[64];
 	} \
 }
 
+#define MATCHW(w, y) { \
+	if (strcmp(id_buffer, (w)) == 0) { \
+		strcpy(t.text, id_buffer); \
+		t.type = (y); \
+		return t; \
+	} \
+}
+
 token lexer_peek(lexer *lexer) {
 	token t = token_new();
 	const size_t tlen = sizeof(t.text);
@@ -62,19 +70,22 @@ token lexer_peek(lexer *lexer) {
 		return t;
 	}
 	
-	if (strcmp(id_buffer, "if") == 0) {
-		t.type = T_IF;
-	} else {
-		t.type = T_ID;
+	MATCHW("if", T_IF);
+	MATCHW("then", T_TN);
+	MATCHW("else", T_EL);
+
+	char *num_end;
+	long number = strtol(id_buffer, &num_end, 10);
+
+	if (*num_end == '\0') {
+		t.type = T_NU;
+		strcpy(t.text, id_buffer);
+		return t;
 	}
 	
-	if (strlen(id_buffer) > tlen) {
-		printf("ERROR\ttext too long for token storage: %s\n", id_buffer);
-		exit(1);
-	}
-	
+	t.type = T_ID;
 	strcpy(t.text, id_buffer);
-	
+
 	return t;
 }
 
