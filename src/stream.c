@@ -26,11 +26,22 @@ int stream_close(stream *s) {
 	}
 }
 
+void stream_update_position(stream *s, char c) {
+	if (c == '\n') {
+		s->line++;
+		s->column = 0;
+	} else {
+		s->column++;
+	}
+}
+
 int stream_consume_char(stream *s, char *c) {
 	if (s->buffer_length > 0) {
-		if (c) {
-			*c = s->buffer[0];	
-		}
+		char x = s->buffer[0];
+
+		if (c) { *c = x; }
+
+		stream_update_position(s, x);
 		
 		int p = 1;
 
@@ -51,6 +62,10 @@ int stream_consume_char(stream *s, char *c) {
 	if (c) {
 		*c = d;
 	}
+
+	if (d != EOF) {
+		stream_update_position(s, (char)d);
+	}
 	
 	return d != EOF;
 }
@@ -68,6 +83,10 @@ int stream_consume(stream *s, const char *prefix) {
 		s->buffer[i++] = s->buffer[p++];
 		s->buffer[i] = 0;
 		s->buffer_length = strlen(s->buffer);
+
+		for (int j = 0; j < len; ++j) {
+			stream_update_position(s, prefix[j]);
+		}
 		
 		return i;
 	} else {

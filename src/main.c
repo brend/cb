@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 			break;			
 		}
 
-		printf("\n");
+		printf("\t%d:%d\n", t.line+1, t.column+1);
 		
 		if (token_is_invalid(t)) {
 			printf("that's it\n");

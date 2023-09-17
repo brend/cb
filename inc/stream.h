@@ -7,6 +7,8 @@ typedef struct {
 	FILE *file;
 	char buffer[64];
 	int buffer_length;
+	int line;
+	int column;
 } stream;
 
 stream stream_open_file(const char *filename);

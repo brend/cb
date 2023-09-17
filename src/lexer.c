@@ -58,6 +58,9 @@ token lexer_peek(lexer *lexer) {
 	stream *s = &lexer->input;
 	
 	stream_consume_whitespace(s);
+
+	t.line = s->line;
+	t.column = s->column;
 	
 	MATCH("+", T_PL);
 	MATCH("-", T_MI);
