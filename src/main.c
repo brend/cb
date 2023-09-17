@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "lexer.h"
+#include "parser.h"
 
 int main(int argc, char** argv) {
 	if (argc < 2) {
@@ -7,7 +7,16 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	lexer lex = lexer_from_file(argv[1]);
+	AST *ast = parse_file(argv[1]);
+
+	print_ast(ast);
+	printf("\n");
+	
+	return 0;
+}
+
+/*
+lexer lex = lexer_from_file(argv[1]);
 	token t;
 	
 	while (1) {
@@ -57,6 +66,4 @@ int main(int argc, char** argv) {
 	}
 	
 	lexer_close(lex);
-	
-	return 0;
-}
+	*/

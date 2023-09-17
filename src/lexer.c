@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include <string.h>
 #include <stdlib.h>
+#include "aux.h"
 
 lexer lexer_from_file(const char *filename) {
 	lexer lex;
@@ -54,7 +55,6 @@ char id_buffer[64];
 
 token lexer_peek(lexer *lexer) {
 	token t = token_new();
-	const size_t tlen = sizeof(t.text);
 	stream *s = &lexer->input;
 	
 	stream_consume_whitespace(s);
@@ -78,8 +78,10 @@ token lexer_peek(lexer *lexer) {
 	MATCHW("else", T_EL);
 
 	char *num_end;
-	long number = strtol(id_buffer, &num_end, 10);
+	
+	strtol(id_buffer, &num_end, 10);
 
+	// if strtol() consumed the whole string, it's a number (see manpage)
 	if (*num_end == '\0') {
 		t.type = T_NU;
 		strcpy(t.text, id_buffer);
