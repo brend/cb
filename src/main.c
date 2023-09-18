@@ -1,40 +1,19 @@
 #include <stdio.h>
 #include "parser.h"
-#include "queue.h"
+#include "lexer.h"
 
 int main(int argc, char** argv) {
-	/*
 	if (argc < 2) {
 		printf("usage: %s <file>\n", argv[0]);
 		return -1;
 	}
-
+/*
 	AST *ast = parse_file(argv[1]);
 
 	print_ast(ast);
 	printf("\n");
 	*/
 
-	Queue *queue = queue_new(10);
-	int i = 0;
-
-	while (queue_enqueue(queue, i)) {
-		printf("enqueue %d\n", i);
-		i++;
-	}
-
-	while (!queue_is_empty(queue)) {
-		printf("dequeue %d\n", queue_dequeue(queue));
-
-			int d;
-	printf("peek: %d -> %d\n", queue_peek(queue, &d), d);
-
-	}
-	
-	return 0;
-}
-
-/*
 lexer lex = lexer_from_file(argv[1]);
 	token t;
 	
@@ -85,4 +64,8 @@ lexer lex = lexer_from_file(argv[1]);
 	}
 	
 	lexer_close(lex);
+}
+
+/*
+
 	*/

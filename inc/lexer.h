@@ -26,7 +26,7 @@ typedef struct {
 } token;
 
 typedef struct {
-	stream input;
+	Stream *input;
 } lexer;
 
 lexer lexer_from_file(const char *filename);

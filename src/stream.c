@@ -2,31 +2,32 @@
 #include <string.h>
 #include <stdlib.h>
 
-stream stream_open_file(const char *filename) {
-	stream input;
-	
-	memset(&input, 0, sizeof(input));
-	
-	input.file = fopen(filename, "r");
+Stream *stream_open_file(const char *filename) {
+	Stream *input = malloc(sizeof(Stream));
+
+	memset(input, 0, sizeof(Stream));
+	input->file = fopen(filename, "r");
+	input->buffer = queue_new(1024);
 	
 	return input;
 }
 
-int stream_is_open(stream *s) {
+int stream_is_open(Stream *s) {
 	return s != NULL && s->file != NULL;
 }
 
-int stream_close(stream *s) {
+int stream_close(Stream *s) {
 	if (s != NULL && s->file != NULL) {
 		fclose(s->file);
 		s->file = NULL;
+		free(s->buffer);
 		return 1;
 	} else {
 		return 0;
 	}
 }
 
-void stream_update_position(stream *s, char c) {
+void stream_update_position(Stream *s, char c) {
 	if (c == '\n') {
 		s->line++;
 		s->column = 0;
@@ -35,66 +36,38 @@ void stream_update_position(stream *s, char c) {
 	}
 }
 
-int stream_consume_char(stream *s, char *c) {
-	if (s->buffer_length > 0) {
-		char x = s->buffer[0];
-
-		if (c) { *c = x; }
-
-		stream_update_position(s, x);
+int stream_consume_char(Stream *s, char *c) {
+	if (queue_is_empty(s->buffer) && stream_is_open(s)) {
+		int d = fgetc(s->file);
 		
-		int p = 1;
-
-		while (p < sizeof(s->buffer)) {
-			s->buffer[p-1] = s->buffer[p];
-			p++;
+		if (d != EOF) {
+			queue_enqueue(s->buffer, d);
 		}
-		
-		s->buffer_length -= 1;
-		
-		return 1;
-	}
-	
-	if (!stream_is_open(s)) { return 0; }
-	
-	int d = fgetc(s->file);
-	
-	if (c) {
-		*c = d;
 	}
 
-	if (d != EOF) {
-		stream_update_position(s, (char)d);
-	}
+	if (queue_is_empty(s->buffer)) { return 0; }
+
+	char x = queue_dequeue(s->buffer);
+
+	if (c) { *c = x; }
+
+	stream_update_position(s, x);
 	
-	return d != EOF;
+	return 1;
 }
 
-void stream_dump(stream *s) {
-	printf("{file=%p, buffer=%s, buffer_length=%d}\n", s->file, s->buffer, s->buffer_length);
-}
-
-int stream_consume(stream *s, const char *prefix) {
+int stream_consume(Stream *s, const char *prefix) {
 	if (stream_has_prefix(s, prefix)) {
-		size_t len = strlen(prefix);
-		int p = len;
-		int i = 0;
-		
-		s->buffer[i++] = s->buffer[p++];
-		s->buffer[i] = 0;
-		s->buffer_length = strlen(s->buffer);
-
-		for (int j = 0; j < len; ++j) {
-			stream_update_position(s, prefix[j]);
+		for (int i = 0; i < strlen(prefix); i++) {
+			stream_consume_char(s, NULL);
 		}
-		
-		return i;
+		return 1;
 	} else {
 		return 0;
 	}
 }
 
-int stream_consume_whitespace(stream *s) {
+int stream_consume_whitespace(Stream *s) {
 	while (
 		stream_has_prefix(s, " ")  || 
 		stream_has_prefix(s, "\t") ||
@@ -106,7 +79,7 @@ int stream_consume_whitespace(stream *s) {
 	return 1;
 }
 
-int stream_consume_alphanum_prefix(stream *s, char *buffer, int buffer_size) {
+int stream_consume_alphanum_prefix(Stream *s, char *buffer, int buffer_size) {
 	char c;
 	int i = 0;
 	
@@ -126,31 +99,41 @@ int stream_consume_alphanum_prefix(stream *s, char *buffer, int buffer_size) {
 	return i;
 }
 
-int stream_has_prefix(stream *s, const char *prefix) {
+int buffer_has_prefix(Queue *s, const char *prefix, int len) {
+	if (len == 0) { return 1; }
+	if (len > queue_size(s)) { return 0; }
+
+	const char *comp = prefix;
+
+	for (int i = 0; i < len; i++) {
+		int c = 0;
+
+		if (!(queue_peeki(s, i, &c) && c == *comp++)) {
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+int stream_has_prefix(Stream *s, const char *prefix) {
 	if (!(s && s->file && prefix)) { return 0; }
 	
 	size_t len = strlen(prefix);
 	
-	if (len == 0) { return 0; }
+	if (len == 0) { return 1; }
 	
-	if (len >= sizeof(s->buffer)) {
+	if (len >= s->buffer->capacity) {
 		printf("buffer overrun\n");
 		exit(2);
 	}
 	
-	int i = s->buffer_length;
-	char c;
-	
-	while (i < len && (c = fgetc(s->file)) != EOF) {
-		s->buffer[i++] = c;
+	int c;
+	int i = len;
+
+	while (i-- > 0 && (c = fgetc(s->file)) != EOF) {
+		queue_enqueue(s->buffer, c);
 	}
 	
-	s->buffer[i] = 0;
-	s->buffer_length = i;
-	
-	if (strncmp(prefix, s->buffer, len) == 0) {
-		return i;
-	}
-	
-	return 0;
+	return buffer_has_prefix(s->buffer, prefix, len);
 }

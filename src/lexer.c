@@ -12,7 +12,7 @@ lexer lexer_from_file(const char *filename) {
 }
 
 int lexer_close(lexer lexer) {
-		return stream_close(&lexer.input);
+		return stream_close(lexer.input);
 }
 
 token token_new() {
@@ -55,7 +55,7 @@ char id_buffer[64];
 
 token lexer_peek(lexer *lexer) {
 	token t = token_new();
-	stream *s = &lexer->input;
+	Stream *s = lexer->input;
 	
 	stream_consume_whitespace(s);
 

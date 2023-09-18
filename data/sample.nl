@@ -1,1 +1,1 @@
-if 2 than 1 else 3
+if x > 1 then 1 else 0

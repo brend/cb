@@ -18,6 +18,10 @@ int queue_is_full(Queue *queue) {
     return queue->front == (queue->rear + 1) % queue->capacity;
 }
 
+int queue_size(Queue *queue) {
+    return abs((queue->rear - queue->front) % queue->capacity);
+}
+
 int queue_enqueue(Queue *queue, int data) {
     if (queue_is_full(queue)) {
         return 0;
@@ -45,6 +49,18 @@ int queue_peek(Queue *queue, int *data) {
 
     if (data) {
         *data = queue->data[queue->front];
+    }
+    
+    return 1;
+}
+
+int queue_peeki(Queue *queue, int offset, int *data) {
+    if (offset >= queue_size(queue)) {
+        return 0;
+    }
+
+    if (data) {
+        *data = queue->data[(queue->front + offset) % queue->capacity];
     }
     
     return 1;
