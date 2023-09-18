@@ -25,6 +25,10 @@ int main(int argc, char** argv) {
 
 	while (!queue_is_empty(queue)) {
 		printf("dequeue %d\n", queue_dequeue(queue));
+
+			int d;
+	printf("peek: %d -> %d\n", queue_peek(queue, &d), d);
+
 	}
 	
 	return 0;

@@ -37,3 +37,15 @@ int queue_dequeue(Queue *queue) {
     queue->front = (queue->front + 1) % queue->capacity;
     return data;
 }
+
+int queue_peek(Queue *queue, int *data) {
+    if (queue_is_empty(queue)) {
+        return 0;
+    }
+
+    if (data) {
+        *data = queue->data[queue->front];
+    }
+    
+    return 1;
+}

@@ -13,5 +13,6 @@ int queue_is_empty(Queue *queue);
 int queue_is_full(Queue *queue);
 int queue_enqueue(Queue *queue, int data);
 int queue_dequeue(Queue *queue);
+int queue_peek(Queue *queue, int *data);
 
 #endif
