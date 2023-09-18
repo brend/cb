@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include "parser.h"
+#include "queue.h"
 
 int main(int argc, char** argv) {
+	/*
 	if (argc < 2) {
 		printf("usage: %s <file>\n", argv[0]);
 		return -1;
@@ -11,6 +13,19 @@ int main(int argc, char** argv) {
 
 	print_ast(ast);
 	printf("\n");
+	*/
+
+	Queue *queue = queue_new(10);
+	int i = 0;
+
+	while (queue_enqueue(queue, i)) {
+		printf("enqueue %d\n", i);
+		i++;
+	}
+
+	while (!queue_is_empty(queue)) {
+		printf("dequeue %d\n", queue_dequeue(queue));
+	}
 	
 	return 0;
 }
