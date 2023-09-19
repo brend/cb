@@ -106,9 +106,9 @@ int buffer_has_prefix(Queue *s, const char *prefix, int len) {
 	const char *comp = prefix;
 
 	for (int i = 0; i < len; i++) {
-		void *c = 0;
+		char c = 0;
 
-		if (!(queue_peeki(s, i, &c) && (char)c == *comp++)) {
+		if (!(queue_peeki_char(s, i, &c) && c == *comp++)) {
 			return 0;
 		}
 	}
