@@ -4,7 +4,7 @@
 Queue *queue_new(int capacity) {
     Queue *queue = malloc(sizeof(Queue));
     queue->capacity = capacity;
-    queue->data = malloc(sizeof(int) * capacity);
+    queue->data = malloc(sizeof(void*) * capacity);
     queue->front = 0;
     queue->rear = 0;
     return queue;
@@ -22,7 +22,7 @@ int queue_size(Queue *queue) {
     return abs((queue->rear - queue->front) % queue->capacity);
 }
 
-int queue_enqueue(Queue *queue, int data) {
+int queue_enqueue(Queue *queue, void *data) {
     if (queue_is_full(queue)) {
         return 0;
     }
@@ -32,17 +32,17 @@ int queue_enqueue(Queue *queue, int data) {
     return 1;
 }
 
-int queue_dequeue(Queue *queue) {
+void *queue_dequeue(Queue *queue) {
     if (queue_is_empty(queue)) {
         return 0;
     }
 
-    int data = queue->data[queue->front];
+    void *data = queue->data[queue->front];
     queue->front = (queue->front + 1) % queue->capacity;
     return data;
 }
 
-int queue_peek(Queue *queue, int *data) {
+int queue_peek(Queue *queue, void **data) {
     if (queue_is_empty(queue)) {
         return 0;
     }
@@ -54,7 +54,7 @@ int queue_peek(Queue *queue, int *data) {
     return 1;
 }
 
-int queue_peeki(Queue *queue, int offset, int *data) {
+int queue_peeki(Queue *queue, int offset, void **data) {
     if (offset >= queue_size(queue)) {
         return 0;
     }

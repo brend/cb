@@ -41,13 +41,13 @@ int stream_consume_char(Stream *s, char *c) {
 		int d = fgetc(s->file);
 		
 		if (d != EOF) {
-			queue_enqueue(s->buffer, d);
+			queue_enqueue(s->buffer, (void*)d);
 		}
 	}
 
 	if (queue_is_empty(s->buffer)) { return 0; }
 
-	char x = queue_dequeue(s->buffer);
+	char x = (char)queue_dequeue(s->buffer);
 
 	if (c) { *c = x; }
 
@@ -106,9 +106,9 @@ int buffer_has_prefix(Queue *s, const char *prefix, int len) {
 	const char *comp = prefix;
 
 	for (int i = 0; i < len; i++) {
-		int c = 0;
+		void *c = 0;
 
-		if (!(queue_peeki(s, i, &c) && c == *comp++)) {
+		if (!(queue_peeki(s, i, &c) && (char)c == *comp++)) {
 			return 0;
 		}
 	}
