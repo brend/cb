@@ -2,6 +2,7 @@
 #define __LEXER_H__
 
 #include "stream.h"
+#include "queue.h"
 
 typedef enum {
 	T_IV,
@@ -27,14 +28,15 @@ typedef struct {
 
 typedef struct {
 	Stream *input;
+	Queue *buffer;
 } lexer;
 
-lexer lexer_from_file(const char *filename);
-int lexer_close(lexer);
+lexer *lexer_from_file(const char *filename);
+int lexer_close(lexer*);
 
-token lexer_peek(lexer*);
-token lexer_pop(lexer*);
+token *lexer_peek(lexer*);
+token *lexer_pop(lexer*);
 
-int token_is_invalid(token);
+int token_is_invalid(token*);
 
 #endif

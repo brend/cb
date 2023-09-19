@@ -16,12 +16,26 @@ typedef struct {
     struct AST *alternative;
 } AST_IF_STATEMENT;
 
+typedef enum {
+  O_PL,
+  O_MI,
+  O_GT,
+  O_LT
+} Operator;
+
+typedef struct {
+  Operator operator;
+  struct AST *left;
+  struct AST *right;
+} AST_BINARY_EXPRESSION;
+
 typedef struct AST {
     AST_TYPE type;
     union {
         int number;
         char symbol[64];
         AST_IF_STATEMENT if_statement;
+        AST_BINARY_EXPRESSION binary_expression;
         struct {
             int length;
             struct AST **items;
