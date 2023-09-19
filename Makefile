@@ -9,9 +9,11 @@ _OBJS = main.o stream.o lexer.o parser.o aux.o queue.o
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 $(ODIR)/%.o: $(SDIR)/%.c
+	mkdir -p $(@D)
 	$(CC) -c $(INC) -o $@ $< $(CFLAGS) 
 
 $(OUT): $(OBJS) 
+	mkdir -p $(@D)
 	$(CC) -o $(OUT) $^
 
 .PHONY: clean
