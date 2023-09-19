@@ -5,6 +5,34 @@
 
 #define log_parserr(tk, ...) {fprintf(stderr, "error at %d:%d \"%s\": ", (tk).line, (tk).column, (tk).text);fprintf(stderr, __VA_ARGS__);}
 
+AST *combine(AST *left, AST *right) {
+	if (!right) return left;
+
+	AST *binary_expression = Empty;
+
+	binary_expression.operator = right.operator;
+	binary_expression.left = left;
+	binary_expression.right = right;
+	return binary_expression;
+}
+
+AST *parse_expression(lexer *lexer) {
+	AST *comparison = parse_term(lexer);
+	AST *expression_p = parse_expression_p(lexer);
+	return combine(comparison, expression_p);
+}
+
+AST *parse_expression_p(lexer *lexer) {
+	token *t = lexer_peek(lexer);	
+	if (t.type == T_GT) {
+		lexer_consume(lexer);
+		AST *term = parse_term(lexer);
+		AST *expression_p = parse_expression_p(lexer);
+		return combine(term, expression_p);
+	}
+}
+
+
 AST *parse_expression(lexer *lexer) {
     token t = lexer_peek(lexer);
 

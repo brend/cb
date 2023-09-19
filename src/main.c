@@ -7,13 +7,15 @@ int main(int argc, char** argv) {
 		printf("usage: %s <file>\n", argv[0]);
 		return -1;
 	}
-/*
+
 	AST *ast = parse_file(argv[1]);
 
 	print_ast(ast);
 	printf("\n");
-	*/
 
+}
+
+/*
 lexer lex = lexer_from_file(argv[1]);
 	token t;
 	
@@ -64,8 +66,5 @@ lexer lex = lexer_from_file(argv[1]);
 	}
 	
 	lexer_close(lex);
-}
-
-/*
 
 	*/
