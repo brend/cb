@@ -1,10 +1,12 @@
 #include "queue.h"
 #include <stdlib.h>
 
+static const QueueData ZeroData = {0};
+
 Queue *queue_new(int capacity) {
     Queue *queue = malloc(sizeof(Queue));
     queue->capacity = capacity;
-    queue->data = malloc(sizeof(void*) * capacity);
+    queue->data = malloc(sizeof(QueueData) * capacity);
     queue->front = 0;
     queue->rear = 0;
     return queue;
@@ -22,7 +24,7 @@ int queue_size(Queue *queue) {
     return abs((queue->rear - queue->front) % queue->capacity);
 }
 
-int queue_enqueue(Queue *queue, void *data) {
+int queue_enqueue(Queue *queue, QueueData data) {
     if (queue_is_full(queue)) {
         return 0;
     }
@@ -32,17 +34,47 @@ int queue_enqueue(Queue *queue, void *data) {
     return 1;
 }
 
-void *queue_dequeue(Queue *queue) {
+int queue_enqueue_char(Queue *queue, char c) {
+	QueueData data = ZeroData;
+	data.charValue = c;
+	queue_enqueue(queue, data);
+}
+
+int queue_enqueue_int(Queue *queue, int i) {
+	QueueData data = ZeroData;
+	data.intValue = i;
+	queue_enqueue(queue, data);
+}
+
+int queue_enqueue_ptr(Queue *queue, void *ptr) {
+	QueueData data = ZeroData;
+	data.ptrValue = ptr;
+	queue_enqueue(queue, data);
+}
+
+QueueData queue_dequeue(Queue *queue) {
     if (queue_is_empty(queue)) {
-        return 0;
+        return ZeroData;
     }
 
-    void *data = queue->data[queue->front];
+    QueueData data = queue->data[queue->front];
     queue->front = (queue->front + 1) % queue->capacity;
     return data;
 }
 
-int queue_peek(Queue *queue, void **data) {
+char queue_dequeue_char(Queue *queue) {
+	return queue_dequeue(queue).charValue;
+}
+
+int queue_dequeue_char(Queue *queue) {
+	return queue_dequeue(queue).intValue;
+}
+
+void* queue_dequeue_char(Queue *queue) {
+	return queue_dequeue(queue).ptrValue;
+}
+
+int queue_peek(Queue *queue, QueueData *data) {
     if (queue_is_empty(queue)) {
         return 0;
     }
@@ -54,7 +86,7 @@ int queue_peek(Queue *queue, void **data) {
     return 1;
 }
 
-int queue_peeki(Queue *queue, int offset, void **data) {
+int queue_peeki(Queue *queue, int offset, QueueData *data) {
     if (offset >= queue_size(queue)) {
         return 0;
     }
