@@ -9,7 +9,7 @@ many a student.
 ## the name though?
 Consequently, NL could mean any number of things, such as
 - Needs Love
-- Neta Language (+1 compared to Meta Language...)
+- Neta Language (+1 compared to Meta Language 🫤)
 - Not Likely (to succeed?)
 
 Take your pick or insert your own! (pull request)
