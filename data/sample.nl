@@ -1,1 +1,1 @@
-x > 1
+if x > y then 1 else 0

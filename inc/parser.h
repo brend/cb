@@ -6,7 +6,8 @@ typedef enum {
     AST_NUMBER,
     AST_SYMBOL,
     AST_IF,
-    AST_LIST
+    AST_LIST,
+	AST_BINARY,
 } AST_TYPE;
 
 struct AST;

@@ -22,6 +22,7 @@ AST *combine(Operator operator, AST *left, AST *right) {
 
 	AST *b = ast_new();
 
+	b->type = AST_BINARY;
 	b->binary_expression.operator = operator;
 	b->binary_expression.left = left;
 	b->binary_expression.right = right;
@@ -161,7 +162,7 @@ AST *parse_term(lexer *lexer) {
     }
     */
 
-    log_parserr(t, "Invalid token");
+    log_parserr(t, "Invalid token\n");
 
     return NULL;
 }
@@ -188,6 +189,19 @@ void print_ast(const AST* ast) {
 
     if (ast->type == AST_SYMBOL) {
         printf("SYMBOL(%s)", ast->symbol);
+    }
+
+    if (ast->type == AST_BINARY) {
+      printf("(");
+      print_ast(ast->binary_expression.left);
+    switch (ast->binary_expression.operator) {
+    case O_GT: printf(" > "); break;
+    case O_LT: printf(" < "); break;
+    case O_PL: printf(" + "); break;
+    default: printf(" ? "); break;
+    }
+      print_ast(ast->binary_expression.right);
+      printf(")");
     }
 
     if (ast->type == AST_IF) {

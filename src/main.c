@@ -2,12 +2,24 @@
 #include "parser.h"
 #include "lexer.h"
 
+void print_file(char *filename) {
+  char buffer[1024*1024];
+  FILE *f = fopen(filename, "r");
+  fread(buffer, sizeof(char), sizeof(buffer), f);
+  printf("%s\n", buffer);
+  fclose(f);
+}
+
 int main(int argc, char** argv) {
 	if (argc < 2) {
 		printf("usage: %s <file>\n", argv[0]);
 		return -1;
 	}
 
+  printf("=== input ===\n");
+  print_file(argv[1]);
+
+  printf("=== abstract syntax tree ===\n");
 	AST *ast = parse_file(argv[1]);
 
 	print_ast(ast);
