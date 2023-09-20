@@ -2,6 +2,7 @@
 #define __PARSER_H__
 
 typedef enum {
+  AST_UNDEFINED,
     AST_NUMBER,
     AST_SYMBOL,
     AST_IF,
@@ -17,6 +18,7 @@ typedef struct {
 } AST_IF_STATEMENT;
 
 typedef enum {
+  O_UNDEFINED,
   O_PL,
   O_MI,
   O_GT,

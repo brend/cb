@@ -31,6 +31,7 @@ int queue_dequeue_int(Queue *queue);
 void *queue_dequeue_ptr(Queue *queue);
 
 int queue_peek(Queue *queue, QueueData *data);
+int queue_peek_ptr(Queue *queue, void **ptr);
 int queue_peeki(Queue *queue, int offset, QueueData *data);
 int queue_peeki_char(Queue *queue, int offset, char *c);
 

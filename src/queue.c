@@ -35,21 +35,21 @@ int queue_enqueue(Queue *queue, QueueData data) {
 }
 
 int queue_enqueue_char(Queue *queue, char c) {
-	QueueData data = ZeroData;
-	data.charValue = c;
-	return queue_enqueue(queue, data);
+  QueueData data = ZeroData;
+  data.charValue = c;
+  return queue_enqueue(queue, data);
 }
 
 int queue_enqueue_int(Queue *queue, int i) {
-	QueueData data = ZeroData;
-	data.intValue = i;
-	return queue_enqueue(queue, data);
+  QueueData data = ZeroData;
+  data.intValue = i;
+  return queue_enqueue(queue, data);
 }
 
 int queue_enqueue_ptr(Queue *queue, void *ptr) {
-	QueueData data = ZeroData;
-	data.ptrValue = ptr;
-	return queue_enqueue(queue, data);
+  QueueData data = ZeroData;
+  data.ptrValue = ptr;
+  return queue_enqueue(queue, data);
 }
 
 QueueData queue_dequeue(Queue *queue) {
@@ -63,15 +63,15 @@ QueueData queue_dequeue(Queue *queue) {
 }
 
 char queue_dequeue_char(Queue *queue) {
-	return queue_dequeue(queue).charValue;
+  return queue_dequeue(queue).charValue;
 }
 
 int queue_dequeue_int(Queue *queue) {
-	return queue_dequeue(queue).intValue;
+  return queue_dequeue(queue).intValue;
 }
 
 void* queue_dequeue_ptr(Queue *queue) {
-	return queue_dequeue(queue).ptrValue;
+  return queue_dequeue(queue).ptrValue;
 }
 
 int queue_peek(Queue *queue, QueueData *data) {
@@ -84,6 +84,13 @@ int queue_peek(Queue *queue, QueueData *data) {
     }
     
     return 1;
+}
+
+int queue_peek_ptr(Queue *queue, void **ptr) {
+  QueueData data = ZeroData;
+  int result = queue_peek(queue, &data);
+  if (ptr) *ptr = data.ptrValue;
+  return result;
 }
 
 int queue_peeki(Queue *queue, int offset, QueueData *data) {
@@ -99,8 +106,8 @@ int queue_peeki(Queue *queue, int offset, QueueData *data) {
 }
 
 int queue_peeki_char(Queue *queue, int offset, char *c) {
-	QueueData data = ZeroData;
-	int result = queue_peeki(queue, offset, &data);
-	if (c) *c = data.charValue;
-	return result;
+  QueueData data = ZeroData;
+  int result = queue_peeki(queue, offset, &data);
+  if (c) *c = data.charValue;
+  return result;
 }

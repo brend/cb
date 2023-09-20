@@ -58,8 +58,8 @@ AST *parse_comparison(lexer *lexer) {
 
 AST *parse_comparison_p(lexer *lexer, Operator *operator) {
 	token *t = lexer_peek(lexer);
-	if (t->type == T_PL) {
-    *operator = O_PL;
+	if (t->type == T_GT) {
+    *operator = O_GT;
 		lexer_pop(lexer);
     Operator o2 = 0;
 		AST *term = parse_term(lexer);
@@ -87,7 +87,7 @@ AST *parse_term(lexer *lexer) {
             return NULL;
         }
 
-        AST *ast = malloc(sizeof(AST));
+        AST *ast = ast_new();
         ast->type = AST_NUMBER;
         ast->number = number;
 
@@ -97,7 +97,7 @@ AST *parse_term(lexer *lexer) {
     }
 
     if (t->type == T_ID) {
-        AST *ast = malloc(sizeof(AST));
+        AST *ast = ast_new();
         ast->type = AST_SYMBOL;
 
         strncpy(ast->symbol, t->text, sizeof(ast->symbol));
@@ -110,7 +110,7 @@ AST *parse_term(lexer *lexer) {
     if (t->type == T_IF) {
 	lexer_pop(lexer);
 
-        AST *ast = malloc(sizeof(AST));
+        AST *ast = ast_new();
         ast->type = AST_IF;
 
         AST *condition = parse_expression(lexer);
