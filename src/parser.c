@@ -18,57 +18,57 @@ AST *ast_new() {
 }
 
 AST *combine(Operator operator, AST *left, AST *right) {
-	if (!right) return left;
+  if (!right) return left;
 
-	AST *b = ast_new();
+  AST *b = ast_new();
 
-	b->type = AST_BINARY;
-	b->binary_expression.operator = operator;
-	b->binary_expression.left = left;
-	b->binary_expression.right = right;
-	return b;
+  b->type = AST_BINARY;
+  b->binary_expression.operator = operator;
+  b->binary_expression.left = left;
+  b->binary_expression.right = right;
+  return b;
 }
 
 AST *parse_expression(lexer *lexer) {
   Operator operator = 0;
-	AST *comparison = parse_comparison(lexer);
-	AST *expression_p = parse_expression_p(lexer, &operator);
-	return combine(operator, comparison, expression_p);
+  AST *comparison = parse_comparison(lexer);
+  AST *expression_p = parse_expression_p(lexer, &operator);
+  return combine(operator, comparison, expression_p);
 }
 
 AST *parse_expression_p(lexer *lexer, Operator *operator) {
-	token *t = lexer_peek(lexer);	
-	if (t->type == T_GT) {
+  token *t = lexer_peek(lexer); 
+  if (t->type == T_GT) {
     *operator = O_GT;
-		lexer_pop(lexer);
+    lexer_pop(lexer);
     Operator o2 = 0;
-		AST *comparison = parse_comparison(lexer);
-		AST *expression_p = parse_expression_p(lexer, &o2);
-		return combine(o2, comparison, expression_p);
-	} else {
-		return NULL;
-	}
+    AST *comparison = parse_comparison(lexer);
+    AST *expression_p = parse_expression_p(lexer, &o2);
+    return combine(o2, comparison, expression_p);
+  } else {
+    return NULL;
+  }
 }
 
 AST *parse_comparison(lexer *lexer) {
   Operator operator = 0;
-	AST *term = parse_term(lexer);
-	AST *comparison_p = parse_comparison_p(lexer, &operator);
-	return combine(operator, term, comparison_p);
+  AST *term = parse_term(lexer);
+  AST *comparison_p = parse_comparison_p(lexer, &operator);
+  return combine(operator, term, comparison_p);
 }
 
 AST *parse_comparison_p(lexer *lexer, Operator *operator) {
-	token *t = lexer_peek(lexer);
-	if (t->type == T_GT) {
+  token *t = lexer_peek(lexer);
+  if (t->type == T_GT) {
     *operator = O_GT;
-		lexer_pop(lexer);
+    lexer_pop(lexer);
     Operator o2 = 0;
-		AST *term = parse_term(lexer);
-		AST *comparison_p = parse_comparison_p(lexer, &o2);
-		return combine(o2, term, comparison_p);
-	} else {
-		return NULL;
-	}
+    AST *term = parse_term(lexer);
+    AST *comparison_p = parse_comparison_p(lexer, &o2);
+    return combine(o2, term, comparison_p);
+  } else {
+    return NULL;
+  }
 }
 
 AST *parse_term(lexer *lexer) {
@@ -81,7 +81,7 @@ AST *parse_term(lexer *lexer) {
 
     if (t->type == T_NU) {
         char *num_end;
-    	long number = strtol(t->text, &num_end, 10);
+      long number = strtol(t->text, &num_end, 10);
 
         if (*num_end != '\0') {
             log_parserr(t, "Invalid number: %s\n", t->text);
@@ -92,7 +92,7 @@ AST *parse_term(lexer *lexer) {
         ast->type = AST_NUMBER;
         ast->number = number;
 
-	lexer_pop(lexer);
+  lexer_pop(lexer);
 
         return ast;
     }
@@ -103,19 +103,19 @@ AST *parse_term(lexer *lexer) {
 
         strncpy(ast->symbol, t->text, sizeof(ast->symbol));
 
-	lexer_pop(lexer);
+  lexer_pop(lexer);
 
         return ast;
     }
 
     if (t->type == T_IF) {
-	lexer_pop(lexer);
+        lexer_pop(lexer);
 
         AST *ast = ast_new();
         ast->type = AST_IF;
 
         AST *condition = parse_expression(lexer);
-        token *t_then = lexer_peek(lexer);
+        token *t_then = lexer_pop(lexer);
 
         if (t_then->type != T_TN) {
             log_parserr(t_then, "Expected 'then' after if condition\n");
@@ -123,7 +123,7 @@ AST *parse_term(lexer *lexer) {
         }
 
         AST *consequence = parse_expression(lexer);
-        token *t_else = lexer_peek(lexer);
+        token *t_else = lexer_pop(lexer);
 
         if (t_else->type != T_EL) {
             log_parserr(t_else, "Expected 'else' after if consequence\n");
