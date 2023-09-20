@@ -10,33 +10,11 @@ void print_file(char *filename) {
   fclose(f);
 }
 
-int main(int argc, char** argv) {
-	if (argc < 2) {
-		printf("usage: %s <file>\n", argv[0]);
-		return -1;
-	}
-
-  printf("=== input ===\n");
-  print_file(argv[1]);
-
-  printf("=== abstract syntax tree ===\n");
-	AST *ast = parse_file(argv[1]);
-
-	print_ast(ast);
-	printf("\n");
-
-}
-
-/*
-lexer lex = lexer_from_file(argv[1]);
-	token t;
-	
-	while (1) {
-		t = lexer_peek(&lex);
-
-		printf("%s\t", t.text);
+void print_token(token *t) {
+  if (!t) { printf("NULL"); return; }
+		printf("%s\t", t->text);
 				
-		switch (t.type) {
+		switch (t->type) {
 			case T_PL:
 			printf("PLUS");
 			break;
@@ -69,14 +47,35 @@ lexer lex = lexer_from_file(argv[1]);
 			break;			
 		}
 
-		printf("\t%d:%d\n", t.line+1, t.column+1);
-		
-		if (token_is_invalid(t)) {
-			printf("that's it\n");
-			break;
-		}
-	}
-	
-	lexer_close(lex);
+		printf("\t%d:%d", t->line+1, t->column+1);
+}
 
-	*/
+void print_tokens(char *filename) {
+  lexer *lexer = lexer_from_file(filename);
+  token *token;
+
+  while ((token = lexer_pop(lexer)) && token->type != T_IV) {
+    print_token(token);
+    printf("\n");
+  }
+}
+
+int main(int argc, char** argv) {
+	if (argc < 2) {
+		printf("usage: %s <file>\n", argv[0]);
+		return -1;
+	}
+
+  printf("=== input ===\n");
+  print_file(argv[1]);
+
+  printf("=== lexical tokens ===\n");
+  print_tokens(argv[1]);
+
+  printf("=== abstract syntax tree ===\n");
+	AST *ast = parse_file(argv[1]);
+
+	print_ast(ast);
+	printf("\n");
+
+}

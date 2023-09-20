@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define log_parserr(tk, ...) {fprintf(stderr, "error at %d:%d \"%s\": ", (tk)->line, (tk)->column, (tk)->text);fprintf(stderr, __VA_ARGS__);}
+#define log_parserr(tk, ...) {fprintf(stderr, "error at %d:%d \"%s\": ", (tk) ? (tk)->line : -1, (tk) ? (tk)->column : -1, (tk) ? (tk)->text : "NULL");fprintf(stderr, __VA_ARGS__);}
 
+#define log_debug(...) {printf("[%d] ", __LINE__); printf(__VA_ARGS__);}
 AST *parse_expression(lexer *lexer);
 AST *parse_expression_p(lexer *lexer, Operator *operator);
 AST *parse_comparison(lexer *lexer);
@@ -93,6 +94,7 @@ AST *parse_term(lexer *lexer) {
         ast->number = number;
 
   lexer_pop(lexer);
+        log_debug("parsed number\n");
 
         return ast;
     }
@@ -104,33 +106,38 @@ AST *parse_term(lexer *lexer) {
         strncpy(ast->symbol, t->text, sizeof(ast->symbol));
 
   lexer_pop(lexer);
+        log_debug("parsed identifier\n");
 
         return ast;
     }
 
     if (t->type == T_IF) {
+        log_debug("beginning if\n");
         lexer_pop(lexer);
 
         AST *ast = ast_new();
         ast->type = AST_IF;
 
         AST *condition = parse_expression(lexer);
+        log_debug("parsed condition\n");
         token *t_then = lexer_pop(lexer);
 
-        if (t_then->type != T_TN) {
+        if (t_then == NULL || t_then->type != T_TN) {
             log_parserr(t_then, "Expected 'then' after if condition\n");
             return NULL;
         }
 
         AST *consequence = parse_expression(lexer);
+        log_debug("parsed consequence\n");
         token *t_else = lexer_pop(lexer);
 
-        if (t_else->type != T_EL) {
+        if (t_else == NULL || t_else->type != T_EL) {
             log_parserr(t_else, "Expected 'else' after if consequence\n");
             return NULL;
         }
 
         AST *alternative = parse_expression(lexer);
+        log_debug("parsed alternative\n");
 
         ast->if_statement.condition = condition;
         ast->if_statement.consequence = consequence;
