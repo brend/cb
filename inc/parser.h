@@ -1,6 +1,8 @@
 #ifndef __PARSER_H__
 #define __PARSER_H__
 
+#include <stdio.h>
+
 typedef enum {
   AST_UNDEFINED,
     AST_NUMBER,
@@ -46,8 +48,7 @@ typedef struct AST {
     };
 } AST;
 
-AST *parse_file(const char *filename);
-
+AST *parse_file(FILE *file);
 void print_ast(const AST *ast);
 
 #endif

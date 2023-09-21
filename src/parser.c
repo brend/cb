@@ -178,9 +178,8 @@ AST *parse(lexer *lexer) {
     return parse_expression(lexer);
 }
 
-AST *parse_file(const char *filename) {
-    lexer *lexer = lexer_from_file(filename);
-    stream_has_prefix(lexer->input, "skjcndcjknskdcnknsdcnsdkcnskjcndkjnscnksdcnknkcsdjnksd");
+AST *parse_file(FILE *file) {
+    lexer *lexer = lexer_from_file_ptr(file);
     AST *ast = parse(lexer);
 
     return ast;

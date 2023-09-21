@@ -12,6 +12,16 @@ Stream *stream_open_file(const char *filename) {
 	return input;
 }
 
+Stream *stream_from_file_ptr(FILE *file) {
+	Stream *input = malloc(sizeof(Stream));
+
+	memset(input, 0, sizeof(Stream));
+	input->file = file;
+	input->buffer = queue_new(1024);
+	
+	return input;
+}
+
 Stream *stream_from_string(const char *string) {
 	Stream *input = malloc(sizeof(Stream));
 

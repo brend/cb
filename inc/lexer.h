@@ -1,6 +1,7 @@
 #ifndef __LEXER_H__
 #define __LEXER_H__
 
+#include <stdio.h>
 #include "stream.h"
 #include "queue.h"
 
@@ -32,6 +33,7 @@ typedef struct {
 } lexer;
 
 lexer *lexer_from_file(const char *filename);
+lexer *lexer_from_file_ptr(FILE *file);
 lexer *lexer_from_expression(const char *expression);
 int lexer_close(lexer*);
 
