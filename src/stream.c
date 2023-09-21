@@ -37,13 +37,7 @@ void stream_update_position(Stream *s, char c) {
 }
 
 int stream_consume_char(Stream *s, char *c) {
-	if (queue_is_empty(s->buffer) && stream_is_open(s)) {
-		int d = fgetc(s->file);
-		
-		if (d != EOF) {
-			queue_enqueue_char(s->buffer, (char)d);
-		}
-	}
+  stream_has_prefix(s, " ");
 
 	if (queue_is_empty(s->buffer)) { return 0; }
 

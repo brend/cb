@@ -84,14 +84,10 @@ token *lexer_peek(lexer *lexer) {
   MATCHW("then", T_TN);
   MATCHW("else", T_EL);
 
-  char *num_end;
-  
-  strtol(ID_BUFFER, &num_end, 10);
-
-  // if strtol() consumed the whole string, it's a number (see manpage)
-  if (*num_end == '\0') {
+  if (ascii_to_long(ID_BUFFER, NULL)) {
     t->type = T_NU;
     strcpy(t->text, ID_BUFFER);
+    queue_enqueue_ptr(lexer->buffer, t);
     return t;
   }
   

@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "lexer.h"
+#include "aux.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -81,10 +82,9 @@ AST *parse_term(lexer *lexer) {
     }
 
     if (t->type == T_NU) {
-        char *num_end;
-      long number = strtol(t->text, &num_end, 10);
+        long number;
 
-        if (*num_end != '\0') {
+        if (!ascii_to_long(t->text, &number)) {
             log_parserr(t, "Invalid number: %s\n", t->text);
             return NULL;
         }
@@ -180,6 +180,7 @@ AST *parse(lexer *lexer) {
 
 AST *parse_file(const char *filename) {
     lexer *lexer = lexer_from_file(filename);
+    stream_has_prefix(lexer->input, "skjcndcjknskdcnknsdcnsdkcnskjcndkjnscnksdcnknkcsdjnksd");
     AST *ast = parse(lexer);
 
     return ast;
