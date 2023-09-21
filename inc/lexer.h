@@ -32,6 +32,7 @@ typedef struct {
 } lexer;
 
 lexer *lexer_from_file(const char *filename);
+lexer *lexer_from_expression(const char *expression);
 int lexer_close(lexer*);
 
 token *lexer_peek(lexer*);

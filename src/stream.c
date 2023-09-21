@@ -12,6 +12,16 @@ Stream *stream_open_file(const char *filename) {
 	return input;
 }
 
+Stream *stream_from_string(const char *string) {
+	Stream *input = malloc(sizeof(Stream));
+
+	memset(input, 0, sizeof(Stream));
+	input->file = fmemopen((void*)string, strlen(string), "r");
+	input->buffer = queue_new(1024);
+	
+	return input;
+}
+
 int stream_is_open(Stream *s) {
 	return s != NULL && s->file != NULL;
 }

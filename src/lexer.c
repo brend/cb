@@ -10,6 +10,13 @@ lexer *lexer_from_file(const char *filename) {
   return lex;
 }
 
+lexer *lexer_from_expression(const char *expression) {
+  lexer *lex = malloc(sizeof(lexer));
+  lex->input = stream_from_string(expression);
+  lex->buffer = queue_new(64);
+  return lex;
+}
+
 int lexer_close(lexer *lexer) {
   // TODO: free lexer buffer queue
   return stream_close(lexer->input);

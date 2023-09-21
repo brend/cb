@@ -13,6 +13,8 @@ typedef struct {
 
 Stream *stream_open_file(const char *filename);
 
+Stream *stream_from_string(const char *string);
+
 int stream_is_open(Stream *s);
 
 int stream_close(Stream *s);
