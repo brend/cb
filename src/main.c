@@ -4,6 +4,7 @@
 #include "parser.h"
 #include "lexer.h"
 #include "io.h"
+#include "aux.h"
 
 void evaluate_expression(char *expression);
 void evaluate_file(char *filename);
@@ -32,13 +33,17 @@ int main(int argc, char** argv) {
 }
 
 void evaluate_expression(char *expression) {
-    printf("=== input ===\n");
-    printf("%s\n", expression);
+  printf("=== input ===\n");
+  printf("%s\n", expression);
 
 	printf("=== lexical tokens ===\n");
 	print_tokens_from_expression(expression);
 
 	printf("=== abstract syntax tree ===\n");
+  FILE *file = file_from_string(expression);
+  AST *ast = parse_file(file);
+  print_ast(ast);
+  printf("\n"); 
 }
 
 void evaluate_file(char *filename) {

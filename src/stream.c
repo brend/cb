@@ -1,6 +1,7 @@
 #include "stream.h"
 #include <string.h>
 #include <stdlib.h>
+#include <aux.h>
 
 Stream *stream_open_file(const char *filename) {
 	Stream *input = malloc(sizeof(Stream));
@@ -26,7 +27,7 @@ Stream *stream_from_string(const char *string) {
 	Stream *input = malloc(sizeof(Stream));
 
 	memset(input, 0, sizeof(Stream));
-	input->file = fmemopen((void*)string, strlen(string), "r");
+	input->file = file_from_string(string); 
 	input->buffer = queue_new(1024);
 	
 	return input;
