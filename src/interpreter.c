@@ -3,6 +3,7 @@
 
 Value evaluate(AST *ast) {
   Value v = {0};
+  Value w = {0};
 
   switch (ast->type) {
   case AST_NUMBER:
@@ -15,6 +16,18 @@ Value evaluate(AST *ast) {
     v = evaluate(ast->if_statement.condition);
     AST *exp = v.intValue ? ast->if_statement.consequence : ast->if_statement.alternative;
     v = evaluate(exp);
+    break;
+  case AST_BINARY:
+    v = evaluate(ast->binary_expression.left);
+    w = evaluate(ast->binary_expression.right);
+    switch (ast->binary_expression.operator) {
+    case O_PL:
+      v.intValue = v.intValue + w.intValue;
+      break;
+    case O_GT:
+      v.intValue = (v.intValue > w.intValue) ? 1 : 0;
+      break;
+    }
     break;
   default:
     fprintf(stderr, "Unknown expression type: %d\n", ast->type);

@@ -24,6 +24,7 @@ typedef enum {
   O_UNDEFINED,
   O_PL,
   O_MI,
+  O_MU,
   O_GT,
   O_LT
 } Operator;

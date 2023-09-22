@@ -14,6 +14,10 @@ AST *parse_expression_p(lexer *lexer, Operator *operator);
 AST *parse_comparison(lexer *lexer);
 AST *parse_comparison_p(lexer *lexer, Operator *operator);
 AST *parse_term(lexer *lexer);
+AST *parse_term_p(lexer *lexer, Operator *operator);
+AST *parse_factor(lexer *lexer);
+AST *parse_factor_p(lexer *lexer, Operator *operator);
+AST *parse_atom(lexer *lexer);
 
 AST *ast_new() {
   AST *ast = malloc(sizeof(AST));
@@ -75,7 +79,7 @@ AST *parse_comparison_p(lexer *lexer, Operator *operator) {
   }
 }
 
-AST *parse_term(lexer *lexer) {
+AST *parse_atom(lexer *lexer) {
     token *t = lexer_peek(lexer);
 
     if (token_is_invalid(t)) {
@@ -207,6 +211,8 @@ void print_ast(const AST* ast) {
     case O_GT: printf(" > "); break;
     case O_LT: printf(" < "); break;
     case O_PL: printf(" + "); break;
+    case O_MI: printf(" - "); break;
+    case O_MU: printf(" * "); break;
     default: printf(" ? "); break;
     }
       print_ast(ast->binary_expression.right);
@@ -236,4 +242,46 @@ void print_ast(const AST* ast) {
 
         printf(")");
     }*/
+}
+
+AST *parse_term(lexer *lexer) {
+  Operator operator = 0;
+  AST *factor = parse_factor(lexer);
+  AST *term_p = parse_term_p(lexer, &operator);
+  return combine(operator, factor, term_p);
+}
+
+AST *parse_term_p(lexer *lexer, Operator *operator) {
+  token *t = lexer_peek(lexer); 
+  if (t->type == T_PL) {
+    *operator = O_PL;
+    lexer_pop(lexer);
+    Operator o2 = 0;
+    AST *factor = parse_factor(lexer);
+    AST *term_p = parse_term_p(lexer, &o2);
+    return combine(o2, factor, term_p);
+  } else {
+    return NULL;
+  }
+}
+
+AST *parse_factor(lexer *lexer) {
+  Operator operator = 0;
+  AST *atom = parse_atom(lexer);
+  AST *factor_p = parse_factor_p(lexer, &operator);
+  return combine(operator, atom, factor_p);
+}
+
+AST *parse_factor_p(lexer *lexer, Operator *operator) {
+  token *t = lexer_peek(lexer); 
+  if (t->type == T_MU) {
+    *operator = O_MU;
+    lexer_pop(lexer);
+    Operator o2 = 0;
+    AST *atom = parse_atom(lexer);
+    AST *factor_p = parse_factor_p(lexer, &o2);
+    return combine(o2, atom, factor_p);
+  } else {
+    return NULL;
+  }
 }
