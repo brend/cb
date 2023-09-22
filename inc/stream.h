@@ -25,6 +25,8 @@ int stream_consume_whitespace(Stream *s);
 
 int stream_consume_char(Stream *s, char *c);
 
+int stream_peek_char(Stream *s, char *c);
+
 int stream_has_prefix(Stream *s, const char *prefix);
 
 int stream_consume(Stream *s, const char *prefix);

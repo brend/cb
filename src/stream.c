@@ -94,18 +94,26 @@ int stream_consume_whitespace(Stream *s) {
 	return 1;
 }
 
+int stream_peek_char(Stream *s, char *c) {
+  stream_has_prefix(s, " ");
+  if (queue_is_empty(s->buffer)) return 0;
+  if (c) queue_peeki_char(s->buffer, 0, c);
+  return 1;
+}
+
 int stream_consume_alphanum_prefix(Stream *s, char *buffer, int buffer_size) {
 	char c;
 	int i = 0;
+  int begins_with_number = 0;
 	
 	while (i < buffer_size - 1 && 
-		!stream_has_prefix(s, " ") &&
-		!stream_has_prefix(s, "\t") &&
-		!stream_has_prefix(s, "\r") &&
-		!stream_has_prefix(s, "\n") && // TODO: Handle non-alphanum with peek
+    stream_peek_char(s, &c) &&
+    ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) &&
+    (!begins_with_number || (c >= '0' && c <= '9')) &&
 		stream_consume_char(s, &c))
 	{
 		buffer[i] = c;
+    if (i == 0) begins_with_number = (c >= '0' && c <= '9');
 		i++;
 	}
 	
