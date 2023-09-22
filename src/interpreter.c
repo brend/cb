@@ -24,9 +24,24 @@ Value evaluate(AST *ast) {
     case O_PL:
       v.intValue = v.intValue + w.intValue;
       break;
+    case O_MI:
+      v.intValue = v.intValue - w.intValue;
+      break;
+    case O_MU:
+      v.intValue = v.intValue * w.intValue;
+      break;
+    case O_DI:
+      v.intValue = v.intValue / w.intValue;
+      break;
     case O_GT:
       v.intValue = (v.intValue > w.intValue) ? 1 : 0;
       break;
+    case O_LT: 
+      v.intValue = (v.intValue < w.intValue) ? 1 : 0;
+      break;
+    case O_UNDEFINED:
+      fprintf(stderr, "internal error: undefined operator\n");
+      exit(-3);
     }
     break;
   default:

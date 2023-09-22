@@ -10,6 +10,7 @@ typedef enum {
 	T_PL,
 	T_MI,
   T_MU,
+  T_DI,
 	T_GT,
 	T_LT,
 	T_LP,
