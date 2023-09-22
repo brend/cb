@@ -5,6 +5,7 @@
 #include "lexer.h"
 #include "io.h"
 #include "aux.h"
+#include "interpreter.h"
 
 void evaluate_expression(char *expression);
 void evaluate_file(char *filename);
@@ -65,6 +66,13 @@ void evaluate_expression(char *expression) {
   AST *ast = parse_file(file);
   print_ast(ast);
   printf("\n"); 
+  
+  printf("=== evaluation ===\n");
+  if (ast) {
+    Value v = evaluate(ast);
+
+    printf("%ld\n", v.intValue);
+  }
 }
 
 void evaluate_file(char *filename) {
