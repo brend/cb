@@ -6,8 +6,8 @@
 
 #define log_parserr(tk, ...) {fprintf(stderr, "error at %d:%d \"%s\": ", (tk) ? (tk)->line : -1, (tk) ? (tk)->column : -1, (tk) ? (tk)->text : "NULL");fprintf(stderr, __VA_ARGS__);}
 
-//#define log_debug(...) {printf("[%d] ", __LINE__); printf(__VA_ARGS__);}
-int log_debug(const char *p, ...) { (void)p; return 0; }
+#define log_debug(...) {printf("[%d] ", __LINE__); printf(__VA_ARGS__);}
+//int log_debug(const char *p, ...) { (void)p; return 0; }
 
 AST *parse_expression(lexer *lexer);
 AST *parse_expression_p(lexer *lexer, Operator *operator);
@@ -25,6 +25,16 @@ AST *ast_new() {
   return ast;
 }
 
+AST *parse(lexer *lexer) {
+  if (!lexer) { return NULL; }
+  return parse_expression(lexer);
+}
+
+  AST *parse_file(FILE *file) {
+  if (!file) { return NULL; }
+  return parse(lexer_from_file(file));
+}
+
 AST *combine(Operator operator, AST *left, AST *right) {
   if (!right) return left;
 
@@ -34,215 +44,68 @@ AST *combine(Operator operator, AST *left, AST *right) {
   b->binary_expression.operator = operator;
   b->binary_expression.left = left;
   b->binary_expression.right = right;
+  
   return b;
 }
 
 AST *parse_expression(lexer *lexer) {
+  if (!lexer) { return NULL; }
+
+/*
   Operator operator = 0;
   AST *comparison = parse_comparison(lexer);
   AST *expression_p = parse_expression_p(lexer, &operator);
+
   return combine(operator, comparison, expression_p);
+  */
+ return parse_comparison(lexer);
 }
 
+/*
 AST *parse_expression_p(lexer *lexer, Operator *operator) {
+  if (!lexer) { return NULL; }
+
   token *t = lexer_peek(lexer); 
-  if (t->type == T_GT) {
-    *operator = O_GT;
-    lexer_pop(lexer);
-    Operator o2 = 0;
-    AST *comparison = parse_comparison(lexer);
-    AST *expression_p = parse_expression_p(lexer, &o2);
-    return combine(o2, comparison, expression_p);
-  } else {
+
+  switch (t->type) {
+  case T_GT: *operator = O_GT; break;
+  default:
     return NULL;
   }
+
+  lexer_pop(lexer);
+  Operator o2 = 0;
+  AST *comparison = parse_comparison(lexer);
+  AST *expression_p = parse_expression_p(lexer, &o2);
+  return combine(o2, comparison, expression_p);
 }
+*/
 
 AST *parse_comparison(lexer *lexer) {
+  if (!lexer) { return NULL; }
+
   Operator operator = 0;
   AST *term = parse_term(lexer);
   AST *comparison_p = parse_comparison_p(lexer, &operator);
+  
   return combine(operator, term, comparison_p);
 }
 
 AST *parse_comparison_p(lexer *lexer, Operator *operator) {
+  if (!lexer) { return NULL; }
+
   token *t = lexer_peek(lexer);
-  if (t->type == T_GT) {
-    *operator = O_GT;
-    lexer_pop(lexer);
-    Operator o2 = 0;
-    AST *term = parse_term(lexer);
-    AST *comparison_p = parse_comparison_p(lexer, &o2);
-    return combine(o2, term, comparison_p);
-  } else {
+  switch (t->type) {
+  case T_GT: *operator = O_GT; break;
+  default:
     return NULL;
   }
-}
-
-AST *parse_atom(lexer *lexer) {
-    token *t = lexer_peek(lexer);
-
-    if (token_is_invalid(t)) {
-        log_parserr(t, "Invalid token: %s\n", t->text);
-        return NULL;
-    }
-
-    if (t->type == T_NU) {
-        long number;
-
-        if (!ascii_to_long(t->text, &number)) {
-            log_parserr(t, "Invalid number: %s\n", t->text);
-            return NULL;
-        }
-
-        AST *ast = ast_new();
-        ast->type = AST_NUMBER;
-        ast->number = number;
 
   lexer_pop(lexer);
-        log_debug("parsed number\n");
-
-        return ast;
-    }
-
-    if (t->type == T_ID) {
-        AST *ast = ast_new();
-        ast->type = AST_SYMBOL;
-
-        strncpy(ast->symbol, t->text, sizeof(ast->symbol));
-
-  lexer_pop(lexer);
-        log_debug("parsed identifier\n");
-
-        return ast;
-    }
-
-    if (t->type == T_IF) {
-        log_debug("beginning if\n");
-        lexer_pop(lexer);
-
-        AST *ast = ast_new();
-        ast->type = AST_IF;
-
-        AST *condition = parse_expression(lexer);
-        log_debug("parsed condition\n");
-        token *t_then = lexer_pop(lexer);
-
-        if (t_then == NULL || t_then->type != T_TN) {
-            log_parserr(t_then, "Expected 'then' after if condition\n");
-            return NULL;
-        }
-
-        AST *consequence = parse_expression(lexer);
-        log_debug("parsed consequence\n");
-        token *t_else = lexer_pop(lexer);
-
-        if (t_else == NULL || t_else->type != T_EL) {
-            log_parserr(t_else, "Expected 'else' after if consequence\n");
-            return NULL;
-        }
-
-        AST *alternative = parse_expression(lexer);
-        log_debug("parsed alternative\n");
-
-        ast->if_statement.condition = condition;
-        ast->if_statement.consequence = consequence;
-        ast->if_statement.alternative = alternative;
-
-        return ast;
-    }
-
-/*
-    if (token->type == T_LP) {
-        AST *ast = malloc(sizeof(AST));
-        ast->type = AST_LIST;
-        ast->list = malloc(sizeof(AST_LIST));
-        ast->list->length = 0;
-        ast->list->items = malloc(sizeof(AST *) * 10);
-
-        while (1) {
-            AST *item = parse_expression(lexer);
-
-            if (item == NULL) {
-                break;
-            }
-
-            ast->list->items[ast->list->length] = item;
-            ast->list->length += 1;
-        }
-
-        return ast;
-    }
-    */
-
-    log_parserr(t, "Invalid token\n");
-
-    return NULL;
-}
-
-AST *parse(lexer *lexer) {
-    return parse_expression(lexer);
-}
-
-AST *parse_file(FILE *file) {
-    lexer *lexer = lexer_from_file_ptr(file);
-    AST *ast = parse(lexer);
-
-    return ast;
-}
-
-void print_ast(const AST* ast) {
-    if (ast == NULL) {
-        return;
-    }
-
-    if (ast->type == AST_NUMBER) {
-        printf("NUMBER(%d)", ast->number);
-    }
-
-    if (ast->type == AST_SYMBOL) {
-        printf("SYMBOL(%s)", ast->symbol);
-    }
-
-    if (ast->type == AST_BINARY) {
-      printf("(");
-      print_ast(ast->binary_expression.left);
-    switch (ast->binary_expression.operator) {
-    case O_GT: printf(" > "); break;
-    case O_LT: printf(" < "); break;
-    case O_PL: printf(" + "); break;
-    case O_MI: printf(" - "); break;
-    case O_MU: printf(" * "); break;
-    case O_DI: printf(" / "); break;
-    default: printf(" ? "); break;
-    }
-      print_ast(ast->binary_expression.right);
-      printf(")");
-    }
-
-    if (ast->type == AST_IF) {
-        printf("IF(");
-        print_ast(ast->if_statement.condition);
-        printf(" ");
-        print_ast(ast->if_statement.consequence);
-        printf(" ");
-        print_ast(ast->if_statement.alternative);
-        printf(")");
-    }
-/*
-    if (ast->type == AST_LIST) {
-        printf("(");
-
-        for (int i = 0; i < ast->list->length; i++) {
-            print_ast(ast->list->items[i]);
-
-            if (i < ast->list->length - 1) {
-                printf(" ");
-            }
-        }
-
-        printf(")");
-    }*/
+  Operator o2 = 0;
+  AST *term = parse_term(lexer);
+  AST *comparison_p = parse_comparison_p(lexer, &o2);
+  return combine(o2, term, comparison_p);
 }
 
 AST *parse_term(lexer *lexer) {
@@ -287,4 +150,124 @@ AST *parse_factor_p(lexer *lexer, Operator *operator) {
   AST *atom = parse_atom(lexer);
   AST *factor_p = parse_factor_p(lexer, &o2);
   return combine(o2, atom, factor_p);
+}
+
+AST *parse_atom(lexer *lexer) {
+  if (!lexer) { return NULL; }
+
+  token *t = lexer_peek(lexer);
+
+  if (token_is_invalid(t)) {
+      log_parserr(t, "Invalid token: %s\n", t->text);
+      return NULL;
+  }
+
+  long number = 0;
+  AST *ast = NULL;
+  AST *condition = NULL;
+  AST *consequence = NULL;
+  AST *alternative = NULL;
+
+  switch (t->type) {
+  case T_NU:
+    if (!ascii_to_long(t->text, &number)) {
+        log_parserr(t, "Invalid number: %s\n", t->text);
+        return NULL;
+    }
+
+    ast = ast_new();
+    ast->type = AST_NUMBER;
+    ast->number = number;
+
+    lexer_pop(lexer);
+    log_debug("parsed number\n");
+
+    return ast;
+  case T_ID:
+    ast = ast_new();
+    ast->type = AST_SYMBOL;
+
+    strncpy(ast->symbol, t->text, sizeof(ast->symbol));
+
+    lexer_pop(lexer);
+    log_debug("parsed identifier\n");
+
+    return ast;
+  case T_IF:
+    log_debug("beginning if\n");
+    lexer_pop(lexer);
+
+    ast = ast_new();
+    ast->type = AST_IF;
+
+    condition = parse_expression(lexer);
+    log_debug("parsed condition\n");
+    token *t_then = lexer_pop(lexer);
+
+    if (t_then == NULL || t_then->type != T_TN) {
+      log_parserr(t_then, "Expected 'then' after if condition\n");
+      return NULL;
+    }
+
+    consequence = parse_expression(lexer);
+    log_debug("parsed consequence\n");
+    token *t_else = lexer_pop(lexer);
+
+    if (t_else == NULL || t_else->type != T_EL) {
+        log_parserr(t_else, "Expected 'else' after if consequence\n");
+        return NULL;
+    }
+
+    alternative = parse_expression(lexer);
+    log_debug("parsed alternative\n");
+
+    ast->if_statement.condition = condition;
+    ast->if_statement.consequence = consequence;
+    ast->if_statement.alternative = alternative;
+
+    return ast;
+  default:
+    log_parserr(t, "Unexpected token of type %d: \"%s\"\n", t->type, t->text);
+    return NULL;
+  }
+}
+
+void print_ast(const AST* ast) {
+  if (ast == NULL) {
+    return;
+  }
+
+  if (ast->type == AST_NUMBER) {
+    printf("NUMBER(%d)", ast->number);
+  }
+
+  if (ast->type == AST_SYMBOL) {
+    printf("SYMBOL(%s)", ast->symbol);
+  }
+
+  if (ast->type == AST_BINARY) {
+    printf("(");
+    print_ast(ast->binary_expression.left);
+    switch (ast->binary_expression.operator) {
+    case O_GT: printf(" > "); break;
+    case O_LT: printf(" < "); break;
+    case O_PL: printf(" + "); break;
+    case O_MI: printf(" - "); break;
+    case O_MU: printf(" * "); break;
+    case O_DI: printf(" / "); break;
+    default: printf(" ? "); break;
+    }
+    print_ast(ast->binary_expression.right);
+    printf(")");
+  }
+
+  if (ast->type == AST_IF) {
+    printf("[IF ");
+    print_ast(ast->if_statement.condition);
+    printf(" THEN ");
+    print_ast(ast->if_statement.consequence);
+    printf(" ELSE ");
+    print_ast(ast->if_statement.alternative);
+    printf("]");
+  }
 }

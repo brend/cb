@@ -3,34 +3,56 @@
 #include <stdlib.h>
 #include "aux.h"
 
-lexer *lexer_from_file(const char *filename) {
+#define TOKEN_BUFFER_SIZE 64
+
+static char ID_BUFFER[128];
+
+lexer *lexer_new(Stream *input) {
   lexer *lex = malloc(sizeof(lexer));
-  lex->input = stream_open_file(filename);
-  lex->buffer = queue_new(64);
+  memset(lex, 0, sizeof(lexer));
+  lex->input = input;
+  lex->buffer = queue_new(TOKEN_BUFFER_SIZE);
   return lex;
 }
 
-lexer *lexer_from_file_ptr(FILE *file) {
-  lexer *lex = malloc(sizeof(lexer));
-  lex->input = stream_from_file_ptr(file);
-  lex->buffer = queue_new(64);
-  return lex;
+lexer *lexer_open_file(const char *filename) {
+  if (!filename) { return NULL; }
+  return lexer_new(stream_open_file(filename));
+}
+
+lexer *lexer_from_file(FILE *file) {
+  if (!file) { return NULL; }
+  return lexer_new(stream_from_file(file));
 }
 
 lexer *lexer_from_expression(const char *expression) {
-  lexer *lex = malloc(sizeof(lexer));
-  lex->input = stream_from_string(expression);
-  lex->buffer = queue_new(64);
-  return lex;
+  if (!expression) { return NULL; }
+  return lexer_new(stream_from_string(expression));
 }
 
-int lexer_close(lexer *lexer) {
-  // TODO: free lexer buffer queue
-  return stream_close(lexer->input);
+int lexer_destroy(lexer **lexer) {
+  if (!(lexer && *lexer)) {
+    return 0;
+  }
+
+  if ((*lexer)->input) {
+    if (!stream_destroy(&(*lexer)->input)) { return 0; }
+    (*lexer)->input = NULL;
+  }
+
+  if ((*lexer)->buffer) {
+    if (!queue_destroy(&(*lexer)->buffer)) { return 0; }
+    (*lexer)->buffer = NULL;
+  }
+
+  free(*lexer);
+  *lexer = NULL;
+
+  return 1;
 }
 
 token *token_new() {
-token *t = malloc(sizeof(token));
+  token *t = malloc(sizeof(token));
   memset(t, 0, sizeof(token));
   return t;
 }
@@ -47,27 +69,23 @@ int char_is_whitespace(char c) {
   }
 }
 
-char ID_BUFFER[64];
-
 #define MATCH(w, y) { \
   if (stream_consume(s, (w))) { \
-    strcpy(t->text, (w)); \
     t->type = (y); \
-    queue_enqueue_ptr(lexer->buffer, t); \
     return t; \
   } \
 }
 
 #define MATCHW(w, y) { \
   if (strcmp(ID_BUFFER, (w)) == 0) { \
-    strcpy(t->text, ID_BUFFER); \
     t->type = (y); \
-    queue_enqueue_ptr(lexer->buffer, t); \
     return t; \
   } \
 }
 
 token *lexer_peek(lexer *lexer) {
+  if (!lexer) { return NULL; }
+
   token *t = NULL;
 
   if (!queue_is_empty(lexer->buffer)) {
@@ -75,11 +93,13 @@ token *lexer_peek(lexer *lexer) {
     return t;
   }
 
-  t = token_new();
   Stream *s = lexer->input;
   
-  stream_consume_whitespace(s);
+  if (!stream_consume_whitespace(s)) {
+    return NULL;
+  }
 
+  t = token_new();
   t->line = s->line;
   t->column = s->column;
   
@@ -100,22 +120,20 @@ token *lexer_peek(lexer *lexer) {
   MATCHW("then", T_TN);
   MATCHW("else", T_EL);
 
+  strcpy(t->text, ID_BUFFER);
+  queue_enqueue_ptr(lexer->buffer, t);
+
   if (ascii_to_long(ID_BUFFER, NULL)) {
     t->type = T_NU;
-    strcpy(t->text, ID_BUFFER);
-    queue_enqueue_ptr(lexer->buffer, t);
-    return t;
+  } else {
+    t->type = T_ID;
   }
-  
-  t->type = T_ID;
-  strcpy(t->text, ID_BUFFER);
-
-  queue_enqueue_ptr(lexer->buffer, t);
 
   return t;
 }
 
 token *lexer_pop(lexer *lexer) {
+  if (!lexer) { return NULL; }
   token *t = lexer_peek(lexer);
   if (t) {
     queue_dequeue(lexer->buffer);

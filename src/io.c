@@ -50,7 +50,7 @@ void print_token(token *t) {
 }
 
 void print_tokens_from_file(FILE *file) {
-  lexer *lexer = lexer_from_file_ptr(file);
+  lexer *lexer = lexer_from_file(file);
   token *token;
 
   while ((token = lexer_pop(lexer)) && token->type != T_IV) {

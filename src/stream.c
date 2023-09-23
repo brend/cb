@@ -1,51 +1,50 @@
 #include "stream.h"
 #include <string.h>
 #include <stdlib.h>
-#include <aux.h>
+#include "aux.h"
 
-Stream *stream_open_file(const char *filename) {
-	Stream *input = malloc(sizeof(Stream));
+Stream *stream_new(FILE *file) {
+	Stream *s = malloc(sizeof(Stream));
 
-	memset(input, 0, sizeof(Stream));
-	input->file = fopen(filename, "r");
-	input->buffer = queue_new(1024);
+	memset(s, 0, sizeof(Stream));
+	s->buffer = queue_new(1024);
+	s->file = file;
 	
-	return input;
+	return s;
 }
 
-Stream *stream_from_file_ptr(FILE *file) {
-	Stream *input = malloc(sizeof(Stream));
+Stream *stream_open_file(const char *filename) {
+	return stream_new(fopen(filename, "r"));
+}
 
-	memset(input, 0, sizeof(Stream));
-	input->file = file;
-	input->buffer = queue_new(1024);
-	
-	return input;
+Stream *stream_from_file(FILE *file) {
+	return stream_new(file);
 }
 
 Stream *stream_from_string(const char *string) {
-	Stream *input = malloc(sizeof(Stream));
-
-	memset(input, 0, sizeof(Stream));
-	input->file = file_from_string(string); 
-	input->buffer = queue_new(1024);
-	
-	return input;
+	return stream_new(file_from_string(string));
 }
 
 int stream_is_open(Stream *s) {
 	return s != NULL && s->file != NULL;
 }
 
-int stream_close(Stream *s) {
-	if (s != NULL && s->file != NULL) {
-		fclose(s->file);
-		s->file = NULL;
-		free(s->buffer);
-		return 1;
-	} else {
-		return 0;
+int stream_destroy(Stream **s) {
+	if (!(s && *s)) { return 0; }
+
+	if ((*s)->file != NULL) {
+		if (!fclose((*s)->file)) { return 0; }
+		(*s)->file = NULL;
 	}
+
+	if ((*s)->buffer != NULL) {
+		if (!queue_destroy(&(*s)->buffer)) { return 0; }
+		(*s)->buffer = NULL;
+	}
+
+	free(*s);
+	*s = NULL;
+	return 1;
 }
 
 void stream_update_position(Stream *s, char c) {
@@ -58,7 +57,7 @@ void stream_update_position(Stream *s, char c) {
 }
 
 int stream_consume_char(Stream *s, char *c) {
-  stream_has_prefix(s, " ");
+  	stream_has_prefix(s, " ");
 
 	if (queue_is_empty(s->buffer)) { return 0; }
 
@@ -72,17 +71,20 @@ int stream_consume_char(Stream *s, char *c) {
 }
 
 int stream_consume(Stream *s, const char *prefix) {
-	if (stream_has_prefix(s, prefix)) {
-		for (int i = 0; i < strlen(prefix); i++) {
-			stream_consume_char(s, NULL);
-		}
-		return 1;
-	} else {
-		return 0;
+	if (!(s && prefix && stream_has_prefix(s, prefix))) { 
+		return 0; 
 	}
+
+	for (int i = 0; i < strlen(prefix); i++) {
+		stream_consume_char(s, NULL);
+	}
+
+	return 1;
 }
 
 int stream_consume_whitespace(Stream *s) {
+	if (!s) { return 0; }
+
 	while (
 		stream_has_prefix(s, " ")  || 
 		stream_has_prefix(s, "\t") ||
@@ -91,47 +93,57 @@ int stream_consume_whitespace(Stream *s) {
 	{
 		stream_consume_char(s, NULL);
 	}
+
 	return 1;
 }
 
 int stream_peek_char(Stream *s, char *c) {
-  stream_has_prefix(s, " ");
-  if (queue_is_empty(s->buffer)) return 0;
-  if (c) queue_peeki_char(s->buffer, 0, c);
-  return 1;
+	if (!(s && c)) { return 0; }
+
+	stream_has_prefix(s, " ");
+	if (queue_is_empty(s->buffer)) { return 0; }
+	if (c) { queue_peeki_char(s->buffer, 0, c); }
+	
+	return 1;
 }
 
 int stream_consume_alphanum_prefix(Stream *s, char *buffer, int buffer_size) {
-	char c;
+	if (!(s && buffer && buffer_size > 0)) { return 0; }
+
+	char c = 0;
 	int i = 0;
-  int begins_with_number = 0;
+	int begins_with_number = 0;
 	
 	while (i < buffer_size - 1 && 
-    stream_peek_char(s, &c) &&
-    ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) &&
-    (!begins_with_number || (c >= '0' && c <= '9')) &&
+	    stream_peek_char(s, &c) &&
+    	((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) &&
+    	(!begins_with_number || (c >= '0' && c <= '9')) &&
 		stream_consume_char(s, &c))
 	{
 		buffer[i] = c;
-    if (i == 0) begins_with_number = (c >= '0' && c <= '9');
+    	if (i == 0) {
+			begins_with_number = (c >= '0' && c <= '9');
+		}
 		i++;
 	}
 	
 	buffer[i] = 0;
-	
+	//TODO: Error if id is too long
 	return i;
 }
 
-int buffer_has_prefix(Queue *s, const char *prefix, int len) {
+int buffer_has_prefix(Queue *q, const char *prefix, int len) {
+	if (!q) { return 0; }
 	if (len == 0) { return 1; }
-	if (len > queue_size(s)) { return 0; }
+	if (!prefix) { return 0; }
+	if (len > queue_size(q)) { return 0; }
 
 	const char *comp = prefix;
 
 	for (int i = 0; i < len; i++) {
 		char c = 0;
 
-		if (!(queue_peeki_char(s, i, &c) && c == *comp++)) {
+		if (!(queue_peeki_char(q, i, &c) && c == *comp++)) {
 			return 0;
 		}
 	}
@@ -151,7 +163,7 @@ int stream_has_prefix(Stream *s, const char *prefix) {
 		exit(2);
 	}
 	
-	int c;
+	int c = 0;
 	int i = len;
 
 	while (i-- > 0 && (c = fgetc(s->file)) != EOF) {
