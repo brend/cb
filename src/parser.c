@@ -133,6 +133,15 @@ AST *parse_term(lexer *lexer) {
   return combine(operator, factor, term_p);
 }
 
+/*
+AST *recurse(lexer *lex, AST* (*parse_subexpression)(lexer*), Operator *operator) {
+  *operator = 0;
+  AST *left = parse_subexpression(lex);
+  AST *right = recurse(lex, parse_subexpression, &operator);
+  return combine(operator, left, right);
+}
+*/
+
 AST *parse_term_p(lexer *lexer, Operator *operator) {
   token *t = lexer_peek(lexer); 
   switch (t->type) {
