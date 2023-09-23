@@ -1,6 +1,6 @@
 OUT = bin/nl
 CC = cc
-CFLAGS = -g -Wall
+CFLAGS = -Wall
 ODIR = obj
 SDIR = src
 INC = -Iinc

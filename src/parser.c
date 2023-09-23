@@ -119,7 +119,7 @@ AST *parse_comparison_p(lexer *lexer, Operator *operator) {
     return NULL;
   }
 
-  lexer_pop(lexer);
+  token_destroy(lexer_pop(lexer));
   Operator o2 = 0;
   AST *term = parse_term(lexer);
   AST *comparison_p = parse_comparison_p(lexer, &o2);
@@ -150,7 +150,7 @@ AST *parse_term_p(lexer *lexer, Operator *operator) {
   default: return NULL;
   }
 
-  lexer_pop(lexer);
+  token_destroy(lexer_pop(lexer));
   Operator o2 = 0;
   AST *factor = parse_factor(lexer);
   AST *term_p = parse_term_p(lexer, &o2);
@@ -173,7 +173,7 @@ AST *parse_factor_p(lexer *lexer, Operator *operator) {
   default: return NULL;
   }
 
-  lexer_pop(lexer);
+  token_destroy(lexer_pop(lexer));
   Operator o2 = 0;
   AST *atom = parse_atom(lexer);
   AST *factor_p = parse_factor_p(lexer, &o2);
