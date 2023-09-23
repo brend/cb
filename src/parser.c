@@ -6,8 +6,8 @@
 
 #define log_parserr(tk, ...) {fprintf(stderr, "error at %d:%d \"%s\": ", (tk) ? (tk)->line : -1, (tk) ? (tk)->column : -1, (tk) ? (tk)->text : "NULL");fprintf(stderr, __VA_ARGS__);}
 
-#define log_debug(...) {printf("[%d] ", __LINE__); printf(__VA_ARGS__);}
-//int log_debug(const char *p, ...) { (void)p; return 0; }
+//#define log_debug(...) {printf("[%d] ", __LINE__); printf(__VA_ARGS__);}
+int log_debug(const char *p, ...) { (void)p; return 0; }
 
 AST *parse_expression(lexer *lexer);
 AST *parse_expression_p(lexer *lexer, Operator *operator);
@@ -48,10 +48,54 @@ AST *combine(Operator operator, AST *left, AST *right) {
   return b;
 }
 
+AST *fix_associativity(AST *ast) {
+  if (!ast) { return NULL; }
+
+  switch (ast->type) {
+  case AST_NUMBER:
+  case AST_SYMBOL:
+    return ast;
+  case AST_IF:
+    ast->if_statement.condition = fix_associativity(ast->if_statement.condition);
+    ast->if_statement.consequence = fix_associativity(ast->if_statement.consequence);
+    ast->if_statement.alternative = fix_associativity(ast->if_statement.alternative);
+    return ast;
+	case AST_BINARY:
+    ast->binary_expression.right = fix_associativity(ast->binary_expression.right);
+
+    Operator operator = ast->binary_expression.operator;
+
+    if ((operator == O_MI || operator == O_DI) && 
+        ast->binary_expression.right->type == AST_BINARY &&
+        ast->binary_expression.right->binary_expression.operator == operator
+    ) {
+      AST *right = ast->binary_expression.right;
+
+      ast->binary_expression.right = right->binary_expression.right;
+      right->binary_expression.right = right->binary_expression.left;
+      right->binary_expression.left = ast->binary_expression.left;
+      ast->binary_expression.left = right;
+    }
+
+    ast->binary_expression.left = fix_associativity(ast->binary_expression.left);
+
+    return ast;
+  default:
+    fprintf(stderr, "internal error during associativity fix: unhandled ast type %d\n", ast->type);
+    exit(91);
+  }
+}
+
 AST *parse_expression(lexer *lexer) {
   if (!lexer) { return NULL; }
+  
+  AST *ast = parse_comparison(lexer);
 
- return parse_comparison(lexer);
+  if (ast) {
+    ast = fix_associativity(ast);
+  }
+
+  return ast;
 }
 
 AST *parse_comparison(lexer *lexer) {
@@ -101,6 +145,7 @@ AST *parse_term_p(lexer *lexer, Operator *operator) {
   Operator o2 = 0;
   AST *factor = parse_factor(lexer);
   AST *term_p = parse_term_p(lexer, &o2);
+
   return combine(o2, factor, term_p);
 }
 

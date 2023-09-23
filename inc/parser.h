@@ -5,10 +5,9 @@
 
 typedef enum {
   AST_UNDEFINED,
-    AST_NUMBER,
-    AST_SYMBOL,
-    AST_IF,
-    AST_LIST,
+  AST_NUMBER,
+  AST_SYMBOL,
+  AST_IF,
 	AST_BINARY,
 } AST_TYPE;
 
