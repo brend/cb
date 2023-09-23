@@ -39,7 +39,7 @@ typedef struct {
 typedef struct AST {
     AST_TYPE type;
     union {
-        int number;
+        long number;
         char symbol[64];
         AST_IF_STATEMENT if_statement;
         AST_BINARY_EXPRESSION binary_expression;

@@ -85,15 +85,13 @@ int stream_consume(Stream *s, const char *prefix) {
 int stream_consume_whitespace(Stream *s) {
 	if (!s) { return 0; }
 
-	while (
-		stream_has_prefix(s, " ")  || 
-		stream_has_prefix(s, "\t") ||
-		stream_has_prefix(s, "\r") ||
-		stream_has_prefix(s, "\n"))
+    char c = 0;
+    
+	while (stream_peek_char(s, &c) && char_is_whitespace(c))
 	{
 		stream_consume_char(s, NULL);
 	}
-
+	
 	return 1;
 }
 

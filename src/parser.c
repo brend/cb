@@ -238,7 +238,7 @@ void print_ast(const AST* ast) {
   }
 
   if (ast->type == AST_NUMBER) {
-    printf("NUMBER(%d)", ast->number);
+    printf("NUMBER(%ld)", ast->number);
   }
 
   if (ast->type == AST_SYMBOL) {

@@ -57,21 +57,10 @@ token *token_new() {
   return t;
 }
 
-int char_is_whitespace(char c) {
-  switch (c) {
-    case ' ':
-    case '\t':
-    case '\r':
-    case '\n':
-    return 1;
-    default:
-    return 0;
-  }
-}
-
 #define MATCH(w, y) { \
   if (stream_consume(s, (w))) { \
     t->type = (y); \
+    queue_enqueue_ptr(lexer->buffer, t); \
     return t; \
   } \
 }
@@ -79,6 +68,7 @@ int char_is_whitespace(char c) {
 #define MATCHW(w, y) { \
   if (strcmp(ID_BUFFER, (w)) == 0) { \
     t->type = (y); \
+    queue_enqueue_ptr(lexer->buffer, t); \
     return t; \
   } \
 }

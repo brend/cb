@@ -12,3 +12,15 @@ int ascii_to_long(const char *c, long *n) {
 FILE *file_from_string(const char *string) {
   return fmemopen((void*)string, strlen(string), "r");
 }
+
+int char_is_whitespace(char c) {
+  switch (c) {
+    case ' ':
+    case '\t':
+    case '\r':
+    case '\n':
+    return 1;
+    default:
+    return 0;
+  }
+}
