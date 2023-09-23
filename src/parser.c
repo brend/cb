@@ -51,35 +51,8 @@ AST *combine(Operator operator, AST *left, AST *right) {
 AST *parse_expression(lexer *lexer) {
   if (!lexer) { return NULL; }
 
-/*
-  Operator operator = 0;
-  AST *comparison = parse_comparison(lexer);
-  AST *expression_p = parse_expression_p(lexer, &operator);
-
-  return combine(operator, comparison, expression_p);
-  */
  return parse_comparison(lexer);
 }
-
-/*
-AST *parse_expression_p(lexer *lexer, Operator *operator) {
-  if (!lexer) { return NULL; }
-
-  token *t = lexer_peek(lexer); 
-
-  switch (t->type) {
-  case T_GT: *operator = O_GT; break;
-  default:
-    return NULL;
-  }
-
-  lexer_pop(lexer);
-  Operator o2 = 0;
-  AST *comparison = parse_comparison(lexer);
-  AST *expression_p = parse_expression_p(lexer, &o2);
-  return combine(o2, comparison, expression_p);
-}
-*/
 
 AST *parse_comparison(lexer *lexer) {
   if (!lexer) { return NULL; }
@@ -97,6 +70,7 @@ AST *parse_comparison_p(lexer *lexer, Operator *operator) {
   token *t = lexer_peek(lexer);
   switch (t->type) {
   case T_GT: *operator = O_GT; break;
+  case T_LT: *operator = O_LT; break;
   default:
     return NULL;
   }
