@@ -242,7 +242,7 @@ AST *parse_atom(lexer *lexer) {
     ast->type = AST_NUMBER;
     ast->number = number;
 
-    lexer_pop(lexer);
+    token_destroy(lexer_pop(lexer));
     log_debug("parsed number\n");
 
     return ast;
@@ -252,13 +252,13 @@ AST *parse_atom(lexer *lexer) {
 
     strncpy(ast->symbol, t->text, sizeof(ast->symbol));
 
-    lexer_pop(lexer);
+    token_destroy(lexer_pop(lexer));
     log_debug("parsed identifier\n");
 
     return ast;
   case T_IF:
     log_debug("beginning if\n");
-    lexer_pop(lexer);
+    token_destroy(lexer_pop(lexer));
 
     ast = ast_new();
     ast->type = AST_IF;
@@ -287,6 +287,9 @@ AST *parse_atom(lexer *lexer) {
     ast->if_statement.condition = condition;
     ast->if_statement.consequence = consequence;
     ast->if_statement.alternative = alternative;
+
+    token_destroy(t_then);
+    token_destroy(t_else);
 
     return ast;
   default:
