@@ -57,6 +57,13 @@ token *token_new() {
   return t;
 }
 
+int token_destroy(token *t) {
+  if (t) {
+    free(t);
+  }
+  return 1;
+}
+
 #define MATCH(w, y) { \
   if (stream_consume(s, (w))) { \
     t->type = (y); \

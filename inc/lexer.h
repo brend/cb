@@ -34,6 +34,8 @@ typedef struct {
 	Queue *buffer;
 } lexer;
 
+int token_destroy(token *);
+
 lexer *lexer_open_file(const char *filename);
 lexer *lexer_from_file(FILE *file);
 lexer *lexer_from_expression(const char *expression);
