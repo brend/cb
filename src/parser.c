@@ -25,6 +25,35 @@ AST *ast_new() {
   return ast;
 }
 
+int ast_destroy(AST **ast) {
+  if (!(ast && *ast)) {
+    return 0;
+  }
+
+  switch ((*ast)->type) {
+  case AST_NUMBER:
+  case AST_SYMBOL:
+    break;
+  case AST_IF:
+    if (!ast_destroy(&(*ast)->if_statement.condition)) { return 0; }
+    if (!ast_destroy(&(*ast)->if_statement.consequence)) { return 0; }
+    if (!ast_destroy(&(*ast)->if_statement.alternative)) { return 0; }
+    break;
+  case AST_BINARY:
+    if (!ast_destroy(&(*ast)->binary_expression.left)) { return 0; }
+    if (!ast_destroy(&(*ast)->binary_expression.right)) { return 0; }
+    break;
+  default:
+    fprintf(stderr, "internal error during ast destruction: unhandled ast type %d\n", (*ast)->type);
+    exit(91);
+  }
+
+  free(*ast);
+  *ast = NULL;
+
+  return 1;
+}
+
 AST *parse(lexer *lexer) {
   if (!lexer) { return NULL; }
   return parse_expression(lexer);
