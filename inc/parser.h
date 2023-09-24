@@ -50,6 +50,9 @@ typedef struct AST {
 } AST;
 
 AST *parse_file(FILE *file);
+
+int ast_destroy(AST **ast);
+
 void print_ast(const AST *ast);
 
 #endif

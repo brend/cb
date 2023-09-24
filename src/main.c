@@ -73,6 +73,9 @@ void evaluate_expression(char *expression) {
 
     printf("%ld\n", v.intValue);
   }
+
+  fclose(file);
+  ast_destroy(&ast);
 }
 
 void evaluate_file(char *filename) {
@@ -101,4 +104,13 @@ void evaluate_file_ptr(FILE *file) {
 
 	print_ast(ast);
 	printf("\n");
+
+	printf("=== evaluation ===\n");
+	if (ast) {
+		Value v = evaluate(ast);
+
+		printf("%ld\n", v.intValue);
+	}
+
+	ast_destroy(&ast);
 }
