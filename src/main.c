@@ -10,7 +10,6 @@
 void evaluate_expression(char *expression);
 void evaluate_file(char *filename);
 void evaluate_file_ptr(FILE *file);
-void evaluate_stdin();
 char *read_stdin_to_end();
 
 int main(int argc, char** argv) {
@@ -27,7 +26,7 @@ int main(int argc, char** argv) {
 
 	if (argc == 1) {
     char *expression = read_stdin_to_end();
-		evaluate_expression(expression);
+	evaluate_expression(expression);
     free(expression);
 		return 0;
 	}
@@ -55,37 +54,15 @@ char *read_stdin_to_end() {
 }
 
 void evaluate_expression(char *expression) {
-  printf("=== input ===\n");
-  printf("%s\n", expression);
-
-	printf("=== lexical tokens ===\n");
-	print_tokens_from_expression(expression);
-
-	printf("=== abstract syntax tree ===\n");
   FILE *file = file_from_string(expression);
-  AST *ast = parse_file(file);
-  print_ast(ast);
-  printf("\n"); 
-  
-  printf("=== evaluation ===\n");
-  if (ast) {
-    Value v = evaluate(ast);
-
-    printf("%ld\n", v.intValue);
-  }
-
+  evaluate_file_ptr(file);
   fclose(file);
-  ast_destroy(&ast);
 }
 
 void evaluate_file(char *filename) {
 	FILE *file = fopen(filename, "r");
 	evaluate_file_ptr(file);
 	fclose(file);
-}
-
-void evaluate_stdin() {
-	evaluate_file_ptr(stdin);
 }
 
 void evaluate_file_ptr(FILE *file) {

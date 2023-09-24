@@ -59,9 +59,15 @@ AST *parse(lexer *lexer) {
   return parse_expression(lexer);
 }
 
-  AST *parse_file(FILE *file) {
+AST *parse_file(FILE *file) {
   if (!file) { return NULL; }
-  return parse(lexer_from_file(file));
+
+  lexer *lexer = lexer_from_file(file);
+  AST *ast = parse(lexer);
+
+  lexer_destroy(&lexer);
+
+  return ast;
 }
 
 AST *combine(Operator operator, AST *left, AST *right) {
