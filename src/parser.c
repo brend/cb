@@ -18,6 +18,9 @@ AST *parse_term_p(lexer *lexer, Operator *operator);
 AST *parse_factor(lexer *lexer);
 AST *parse_factor_p(lexer *lexer, Operator *operator);
 AST *parse_atom(lexer *lexer);
+AST *parse_atom_number(token *token);
+AST *parse_atom_symbol(token *token);
+AST *parse_atom_if(lexer *lexer);
 
 AST *ast_new() {
   AST *ast = malloc(sizeof(AST));
@@ -225,77 +228,88 @@ AST *parse_atom(lexer *lexer) {
       return NULL;
   }
 
-  long number = 0;
   AST *ast = NULL;
-  AST *condition = NULL;
-  AST *consequence = NULL;
-  AST *alternative = NULL;
-
+  
   switch (t->type) {
   case T_NU:
-    if (!ascii_to_long(t->text, &number)) {
-        log_parserr(t, "Invalid number: %s\n", t->text);
-        return NULL;
-    }
-
-    ast = ast_new();
-    ast->type = AST_NUMBER;
-    ast->number = number;
-
+    ast = parse_atom_number(t);
     token_destroy(lexer_pop(lexer));
     log_debug("parsed number\n");
-
     return ast;
   case T_ID:
-    ast = ast_new();
-    ast->type = AST_SYMBOL;
-
-    strncpy(ast->symbol, t->text, sizeof(ast->symbol));
-
+    ast = parse_atom_symbol(t);
     token_destroy(lexer_pop(lexer));
     log_debug("parsed identifier\n");
-
     return ast;
   case T_IF:
     log_debug("beginning if\n");
     token_destroy(lexer_pop(lexer));
-
-    ast = ast_new();
-    ast->type = AST_IF;
-
-    condition = parse_expression(lexer);
-    log_debug("parsed condition\n");
-    token *t_then = lexer_pop(lexer);
-
-    if (t_then == NULL || t_then->type != T_TN) {
-      log_parserr(t_then, "Expected 'then' after if condition\n");
-      return NULL;
-    }
-
-    consequence = parse_expression(lexer);
-    log_debug("parsed consequence\n");
-    token *t_else = lexer_pop(lexer);
-
-    if (t_else == NULL || t_else->type != T_EL) {
-        log_parserr(t_else, "Expected 'else' after if consequence\n");
-        return NULL;
-    }
-
-    alternative = parse_expression(lexer);
-    log_debug("parsed alternative\n");
-
-    ast->if_statement.condition = condition;
-    ast->if_statement.consequence = consequence;
-    ast->if_statement.alternative = alternative;
-
-    token_destroy(t_then);
-    token_destroy(t_else);
-
+    ast = parse_atom_if(lexer);
     return ast;
   default:
     log_parserr(t, "Unexpected token of type %d: \"%s\"\n", t->type, t->text);
     return NULL;
   }
+}
+
+AST *parse_atom_if(lexer *lexer) {
+  AST *ast = ast_new();
+
+  ast->type = AST_IF;
+
+  AST *condition = parse_expression(lexer);
+  log_debug("parsed condition\n");
+  token *t_then = lexer_pop(lexer);
+
+  if (t_then == NULL || t_then->type != T_TN) {
+    log_parserr(t_then, "Expected 'then' after if condition\n");
+    return NULL;
+  }
+
+  AST *consequence = parse_expression(lexer);
+  log_debug("parsed consequence\n");
+  token *t_else = lexer_pop(lexer);
+
+  if (t_else == NULL || t_else->type != T_EL) {
+      log_parserr(t_else, "Expected 'else' after if consequence\n");
+      return NULL;
+  }
+
+  AST *alternative = parse_expression(lexer);
+  log_debug("parsed alternative\n");
+
+  ast->if_statement.condition = condition;
+  ast->if_statement.consequence = consequence;
+  ast->if_statement.alternative = alternative;
+
+  token_destroy(t_then);
+  token_destroy(t_else);
+
+  return ast;
+}
+
+AST *parse_atom_symbol(token *t) {
+  AST *ast = ast_new();
+
+  ast->type = AST_SYMBOL;
+  strncpy(ast->symbol, t->text, sizeof(ast->symbol));
+
+  return ast;
+}
+
+AST *parse_atom_number(token *t) {
+  long number = 0;
+
+  if (!ascii_to_long(t->text, &number)) {
+      log_parserr(t, "Invalid number: %s\n", t->text);
+      return NULL;
+  }
+
+  AST *ast = ast_new();
+  ast->type = AST_NUMBER;
+  ast->number = number;
+
+  return ast;
 }
 
 void print_ast(const AST* ast) {
