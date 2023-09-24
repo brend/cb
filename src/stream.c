@@ -132,7 +132,7 @@ int stream_consume_alphanum_prefix(Stream *s, char *buffer, int buffer_size) {
 	return i;
 }
 
-int buffer_has_prefix(Queue *q, const char *prefix, int len) {
+int buffer_has_prefix(Queue *q, const char *prefix, size_t len) {
 	if (!q) { return 0; }
 	if (len == 0) { return 1; }
 	if (!prefix) { return 0; }
@@ -164,7 +164,7 @@ int stream_has_prefix(Stream *s, const char *prefix) {
 	}
 	
 	int c = 0;
-	int i = len;
+	size_t i = len;
 
 	while (i-- > 0 && (c = fgetc(s->file)) != EOF) {
 		queue_enqueue_char(s->buffer, c);

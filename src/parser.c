@@ -7,10 +7,9 @@
 #define log_parserr(tk, ...) {fprintf(stderr, "error at %d:%d \"%s\": ", (tk) ? (tk)->line : -1, (tk) ? (tk)->column : -1, (tk) ? (tk)->text : "NULL");fprintf(stderr, __VA_ARGS__);}
 
 //#define log_debug(...) {printf("[%d] ", __LINE__); printf(__VA_ARGS__);}
-int log_debug(const char *p, ...) { (void)p; return 0; }
+//int log_debug(const char *p, ...) { (void)p; return 0; }
 
 AST *parse_expression(lexer *lexer);
-AST *parse_expression_p(lexer *lexer, Operator *operator);
 AST *parse_comparison(lexer *lexer);
 AST *parse_comparison_p(lexer *lexer, Operator *operator);
 AST *parse_term(lexer *lexer);
@@ -22,7 +21,9 @@ AST *parse_atom_number(token *token);
 AST *parse_atom_symbol(token *token);
 AST *parse_atom_if(lexer *lexer);
 
-AST *ast_new() {
+AST *fix_associativity(AST *ast);
+
+AST *ast_new(void) {
   AST *ast = malloc(sizeof(AST));
   memset(ast, 0, sizeof(AST));
   return ast;
@@ -47,7 +48,7 @@ int ast_destroy(AST **ast) {
     if (!ast_destroy(&(*ast)->binary_expression.right)) { return 0; }
     break;
   default:
-    fprintf(stderr, "internal error during ast destruction: unhandled ast type %d\n", (*ast)->type);
+    fprintf(stderr, "internal error in ast_destroy: unhandled ast type %d\n", (*ast)->type);
     exit(91);
   }
 
@@ -58,8 +59,15 @@ int ast_destroy(AST **ast) {
 }
 
 AST *parse(lexer *lexer) {
-  if (!lexer) { return NULL; }
-  return parse_expression(lexer);
+    if (!lexer) { return NULL; }
+    
+    AST *ast = parse_expression(lexer);
+    
+    if (ast) {
+      ast = fix_associativity(ast);
+    }
+
+    return ast;
 }
 
 AST *parse_file(FILE *file) {
@@ -129,12 +137,6 @@ AST *parse_expression(lexer *lexer) {
   
   AST *ast = parse_comparison(lexer);
 
-  printf("*** after pasing tokens: %d\n", queue_size(lexer->buffer));
-
-  if (ast) {
-    ast = fix_associativity(ast);
-  }
-
   return ast;
 }
 
@@ -177,15 +179,6 @@ AST *parse_term(lexer *lexer) {
   AST *term_p = parse_term_p(lexer, &operator);
   return combine(operator, factor, term_p);
 }
-
-/*
-AST *recurse(lexer *lex, AST* (*parse_subexpression)(lexer*), Operator *operator) {
-  *operator = 0;
-  AST *left = parse_subexpression(lex);
-  AST *right = recurse(lex, parse_subexpression, &operator);
-  return combine(operator, left, right);
-}
-*/
 
 AST *parse_term_p(lexer *lexer, Operator *operator) {
   token *t = lexer_peek(lexer); 
@@ -249,15 +242,12 @@ AST *parse_atom(lexer *lexer) {
   case T_NU:
     ast = parse_atom_number(t);
     token_destroy(lexer_pop(lexer));
-    log_debug("parsed number\n");
     return ast;
   case T_ID:
     ast = parse_atom_symbol(t);
     token_destroy(lexer_pop(lexer));
-    log_debug("parsed identifier\n");
     return ast;
   case T_IF:
-    log_debug("beginning if\n");
     token_destroy(lexer_pop(lexer));
     ast = parse_atom_if(lexer);
     return ast;
@@ -295,6 +285,7 @@ AST *parse_atom_if(lexer *lexer) {
 
   if (t_else == NULL || t_else->type != T_EL) {
       log_parserr(t_else, "Expected 'else' after if consequence\n");
+      token_destroy(t_else);
       ast_destroy(&condition);
       ast_destroy(&consequence);
       return NULL;

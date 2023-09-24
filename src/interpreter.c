@@ -31,6 +31,10 @@ Value evaluate(AST *ast) {
       v.intValue = v.intValue * w.intValue;
       break;
     case O_DI:
+            if (w.intValue == 0) {
+                fprintf(stderr, "evaluation error: division by zero\n");
+                exit(300);
+            }
       v.intValue = v.intValue / w.intValue;
       break;
     case O_GT:

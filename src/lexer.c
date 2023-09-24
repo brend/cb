@@ -7,6 +7,8 @@
 
 static char ID_BUFFER[128];
 
+token *token_new(void);
+
 lexer *lexer_new(Stream *input) {
   lexer *lex = malloc(sizeof(lexer));
   memset(lex, 0, sizeof(lexer));
@@ -53,7 +55,7 @@ int lexer_destroy(lexer **lexer) {
   return 1;
 }
 
-token *token_new() {
+token *token_new(void) {
   token *t = malloc(sizeof(token));
   memset(t, 0, sizeof(token));
   return t;
