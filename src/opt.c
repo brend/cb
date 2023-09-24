@@ -1,5 +1,6 @@
 #include "opt.h"
 #include <string.h>
+#include <stdlib.h>
 #include "aux.h"
 
 #define EQ(s) (strcmp((s), argv[i]) == 0)
@@ -17,6 +18,7 @@ Options opt_get(int argc, char **argv) {
 
     if (EQ("-e")) {
       use_expression = 1;
+        continue;
     }
 
     // argument without switch must be a file name
@@ -30,8 +32,8 @@ Options opt_get(int argc, char **argv) {
 
   // if no input has been specified, read from stdin
   if (!options.input) {
-    char *text = read_stdin_to_end();
-    options.input = file_from_string(text);
+    options._input_buffer = read_stdin_to_end();
+    options.input = file_from_string(options._input_buffer);
   }
 
   return options;
@@ -43,6 +45,11 @@ int opt_destroy(Options *opt) {
   if (opt->input) {
     fclose(opt->input);
     opt->input = NULL;
+  }
+
+  if (opt->_input_buffer) {
+    free(opt->_input_buffer);
+    opt->_input_buffer = NULL;
   }
 
   return 1;

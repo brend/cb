@@ -6,6 +6,8 @@
 typedef struct {
   FILE *input;
   int be_verbose;
+
+  char *_input_buffer;
 } Options;
 
 Options opt_get(int argc, char **argv);
