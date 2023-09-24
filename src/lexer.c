@@ -112,7 +112,8 @@ token *lexer_peek(lexer *lexer) {
   MATCH(")", T_RP);
   
   if (!stream_consume_alphanum_prefix(s, ID_BUFFER, sizeof(ID_BUFFER))) {
-    return t;
+    token_destroy(t);
+    return NULL;
   }
   
   MATCHW("if", T_IF);

@@ -129,6 +129,8 @@ AST *parse_expression(lexer *lexer) {
   
   AST *ast = parse_comparison(lexer);
 
+  printf("*** after pasing tokens: %d\n", queue_size(lexer->buffer));
+
   if (ast) {
     ast = fix_associativity(ast);
   }
@@ -150,6 +152,11 @@ AST *parse_comparison_p(lexer *lexer, Operator *operator) {
   if (!lexer) { return NULL; }
 
   token *t = lexer_peek(lexer);
+
+  printf("*** parse_comparison_p: %p\n", (void*)t);
+
+  if (!t) { return NULL; }
+
   switch (t->type) {
   case T_GT: *operator = O_GT; break;
   case T_LT: *operator = O_LT; break;
@@ -182,6 +189,11 @@ AST *recurse(lexer *lex, AST* (*parse_subexpression)(lexer*), Operator *operator
 
 AST *parse_term_p(lexer *lexer, Operator *operator) {
   token *t = lexer_peek(lexer); 
+
+  printf("*** parse_term_p: %p\n", (void*)t);
+
+  if (!t) { return NULL; }
+
   switch (t->type) {
   case T_PL: *operator = O_PL; break;
   case T_MI: *operator = O_MI; break;
@@ -205,6 +217,9 @@ AST *parse_factor(lexer *lexer) {
 
 AST *parse_factor_p(lexer *lexer, Operator *operator) {
   token *t = lexer_peek(lexer); 
+
+  if (!t) { return NULL; }
+
   switch (t->type) {
   case T_MU: *operator = O_MU; break;
   case T_DI: *operator = O_DI; break;
@@ -253,37 +268,54 @@ AST *parse_atom(lexer *lexer) {
 }
 
 AST *parse_atom_if(lexer *lexer) {
-  AST *ast = ast_new();
-
-  ast->type = AST_IF;
-
   AST *condition = parse_expression(lexer);
-  log_debug("parsed condition\n");
+  
+  if (!condition) {
+    return NULL;
+  }
+
   token *t_then = lexer_pop(lexer);
 
   if (t_then == NULL || t_then->type != T_TN) {
     log_parserr(t_then, "Expected 'then' after if condition\n");
+    ast_destroy(&condition);
     return NULL;
   }
 
+  token_destroy(t_then);
+
   AST *consequence = parse_expression(lexer);
-  log_debug("parsed consequence\n");
+
+  if (!consequence) {
+    ast_destroy(&condition);
+    return NULL;
+  }
+
   token *t_else = lexer_pop(lexer);
 
   if (t_else == NULL || t_else->type != T_EL) {
       log_parserr(t_else, "Expected 'else' after if consequence\n");
+      ast_destroy(&condition);
+      ast_destroy(&consequence);
       return NULL;
   }
 
-  AST *alternative = parse_expression(lexer);
-  log_debug("parsed alternative\n");
+  token_destroy(t_else);
 
+  AST *alternative = parse_expression(lexer);
+
+  if (!alternative) {
+    ast_destroy(&condition);
+    ast_destroy(&consequence);
+    return NULL;
+  }
+
+  AST *ast = ast_new();
+
+  ast->type = AST_IF;
   ast->if_statement.condition = condition;
   ast->if_statement.consequence = consequence;
   ast->if_statement.alternative = alternative;
-
-  token_destroy(t_then);
-  token_destroy(t_else);
 
   return ast;
 }

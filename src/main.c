@@ -89,5 +89,7 @@ void evaluate_file_ptr(FILE *file) {
 		printf("%ld\n", v.intValue);
 	}
 
-	ast_destroy(&ast);
+	int ok = ast_destroy(&ast);
+
+	printf("ast destroy: %d\n", ok);
 }
