@@ -41,6 +41,8 @@ int lexer_destroy(lexer **lexer) {
   }
 
   if ((*lexer)->buffer) {
+    token *t = NULL;
+    while ((t = queue_dequeue_ptr((*lexer)->buffer))) { if (t) { token_destroy(t); } }
     if (!queue_destroy(&(*lexer)->buffer)) { return 0; }
     (*lexer)->buffer = NULL;
   }

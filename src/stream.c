@@ -32,10 +32,12 @@ int stream_is_open(Stream *s) {
 int stream_destroy(Stream **s) {
 	if (!(s && *s)) { return 0; }
 
+/*
 	if ((*s)->file != NULL) {
 		if (!fclose((*s)->file)) { return 0; }
 		(*s)->file = NULL;
 	}
+*/
 
 	if ((*s)->buffer != NULL) {
 		if (!queue_destroy(&(*s)->buffer)) { return 0; }

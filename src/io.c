@@ -1,10 +1,12 @@
 #include "io.h"
 #include <stdio.h>
+#include <string.h>
 #include "lexer.h"
 #include "parser.h"
 
 void print_file(FILE *file) {
   char buffer[1024*1024];
+  memset(buffer, 0, sizeof(buffer));
   fread(buffer, sizeof(char), sizeof(buffer), file);
   printf("%s\n", buffer);
 }
@@ -56,9 +58,11 @@ void print_tokens_from_file(FILE *file) {
   while ((token = lexer_pop(lexer)) && token->type != T_IV) {
     print_token(token);
     printf("\n");
+    token_destroy(token);
   }
 
-  // TODO: destroy lexer
+  if (token) { token_destroy(token); }
+  lexer_destroy(&lexer);
 }
 
 void print_tokens_from_expression(char *expression) {
@@ -68,7 +72,10 @@ void print_tokens_from_expression(char *expression) {
     while ((token = lexer_pop(lexer)) && token->type != T_IV) {
         print_token(token);
         printf("\n");
-    }
+    token_destroy(token);
+  }
 
-    // TODO: destroy lexer
+  if (token) { token_destroy(token); }
+  lexer_destroy(&lexer);
 }
+
