@@ -1,28 +1,43 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "parser.h"
-#include "lexer.h"
 #include "io.h"
-#include "aux.h"
 #include "interpreter.h"
 #include "opt.h"
 
-void evaluate_file_ptr(FILE *file);
+int evaluate_file(FILE *file);
+void show_usage(void);
+void show_help(void);
+int run_nl(Options opt);
 
 int main(int argc, char** argv) {
   Options opt = opt_get(argc, argv);
 
-  if (!opt.input) {
-		printf("usage: %s <file>\n       %s -e <expression>\n", argv[0], argv[0]);
-		return -1;
-	}
+  int result = run_nl(opt);
 
-	evaluate_file_ptr(opt.input);
   opt_destroy(&opt);
+
+  return result;
 }
 
-void evaluate_file_ptr(FILE *file) {
+int run_nl(Options opt) {
+  if (opt_invalid(opt)) {
+    show_usage();
+    return -1;
+  }
+
+  if (opt.show_help) {
+    show_help();
+    return 0;
+	}
+
+  if (opt.input) {
+	  return evaluate_file(opt.input);
+  }
+
+  return -2;
+}
+
+int evaluate_file(FILE *file) {
 	printf("=== input ===\n");
 	print_file(file);
 	
@@ -49,4 +64,14 @@ void evaluate_file_ptr(FILE *file) {
 	int ok = ast_destroy(&ast);
 
 	printf("ast destroy: %d\n", ok);
+
+  return 0;
+}
+
+void show_usage(void) {
+  printf("usage: %s \n", "nl");
+}
+
+void show_help(void) {
+  printf("help!");
 }

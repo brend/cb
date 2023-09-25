@@ -19,6 +19,9 @@ Options opt_get(int argc, char **argv) {
     if (EQ("-e")) {
       use_expression = 1;
         continue;
+    } else if (EQ("-h") || EQ("--help")) {
+      options.show_help = 1;
+      continue;
     }
 
     // argument without switch must be a file name
@@ -53,4 +56,8 @@ int opt_destroy(Options *opt) {
   }
 
   return 1;
+}
+
+int opt_invalid(Options opt) {
+  return 0;
 }
