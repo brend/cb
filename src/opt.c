@@ -24,6 +24,9 @@ Options opt_get(int argc, char **argv) {
     } else if (EQ("-h") || EQ("--help")) {
       options.mode = PM_Show_Help;
       break;
+    } else if (EQ("-v") || EQ("--verbose")) {
+      options.verbose = 1;
+      continue;
     }
 
     // argument without switch must be a file name

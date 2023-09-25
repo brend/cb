@@ -5,7 +5,7 @@
 #include "opt.h"
 #include "aux.h"
 
-int evaluate_file(FILE *file);
+int evaluate_file(Options *opt, FILE *file);
 void show_usage(void);
 void show_help(void);
 int run_nl(Options *opt);
@@ -51,36 +51,35 @@ int run_nl(Options *opt) {
     return -2;
   }
 
-  return evaluate_file(input);
+  return evaluate_file(opt, input);
 }
 
-int evaluate_file(FILE *file) {
-	printf("=== input ===\n");
-	print_file(file);
-	
-	fseek(file, 0, SEEK_SET);
-
+int evaluate_file(Options *opt, FILE *file) {
+  if (opt->verbose) {
+	  printf("=== input ===\n");
+	  print_file(file);
+	  fseek(file, 0, SEEK_SET);
   	printf("=== lexical tokens ===\n");
   	print_tokens_from_file(file);
-
-	fseek(file, 0, SEEK_SET);
-
+	  fseek(file, 0, SEEK_SET);
   	printf("=== abstract syntax tree ===\n");
+  }
+
 	AST *ast = parse_file(file);
 
-	print_ast(ast);
-	printf("\n");
+  if (opt->verbose) {
+	  print_ast(ast);
+	  printf("\n");
+	  printf("=== evaluation ===\n");
+  }
 
-	printf("=== evaluation ===\n");
 	if (ast) {
 		Value v = evaluate(ast);
 
 		printf("%ld\n", v.intValue);
 	}
 
-	int ok = ast_destroy(&ast);
-
-	printf("ast destroy: %d\n", ok);
+	ast_destroy(&ast);
 
   return 0;
 }

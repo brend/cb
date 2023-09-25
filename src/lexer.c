@@ -108,6 +108,8 @@ token *lexer_peek(lexer *lexer) {
   MATCH("-", T_MI);
   MATCH("*", T_MU);
   MATCH("/", T_DI);
+  MATCH("=", T_EQ);
+  MATCH("<>", T_NE);
   MATCH(">", T_GT);
   MATCH("<", T_LT);
   MATCH("(", T_LP);

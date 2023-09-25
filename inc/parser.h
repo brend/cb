@@ -25,6 +25,8 @@ typedef enum {
   O_MI,
   O_MU,
   O_DI,
+  O_EQ,
+  O_NE,
   O_GT,
   O_LT
 } Operator;

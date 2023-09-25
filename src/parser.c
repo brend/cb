@@ -155,8 +155,6 @@ AST *parse_comparison_p(lexer *lexer, Operator *operator) {
 
   token *t = lexer_peek(lexer);
 
-  printf("*** parse_comparison_p: %p\n", (void*)t);
-
   if (!t) { return NULL; }
 
   switch (t->type) {
@@ -182,8 +180,6 @@ AST *parse_term(lexer *lexer) {
 
 AST *parse_term_p(lexer *lexer, Operator *operator) {
   token *t = lexer_peek(lexer); 
-
-  printf("*** parse_term_p: %p\n", (void*)t);
 
   if (!t) { return NULL; }
 

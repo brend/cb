@@ -11,6 +11,7 @@ typedef enum {
 
 typedef struct {
   ProgramMode mode;
+  int verbose;
 
   char *expression;
   char *filename;

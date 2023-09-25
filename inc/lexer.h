@@ -11,6 +11,8 @@ typedef enum {
 	T_MI,
   T_MU,
   T_DI,
+  T_EQ,
+  T_NE,
 	T_GT,
 	T_LT,
 	T_LP,
