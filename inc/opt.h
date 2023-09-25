@@ -1,19 +1,24 @@
 #ifndef __OPT_H__
 #define __OPT_H__
 
-#include <stdio.h>
+typedef enum {
+  PM_Opts_Invalid,
+  PM_Show_Help,
+  PM_Eval_File,
+  PM_Eval_Expr,
+  PM_Eval_Stdin
+} ProgramMode;
 
 typedef struct {
-  FILE *input;
-  int be_verbose;
-  int show_help;
+  ProgramMode mode;
 
-  char *_input_buffer;
+  char *expression;
+  char *filename;
 } Options;
 
 Options opt_get(int argc, char **argv);
 int opt_destroy(Options *opt);
 
-int opt_invalid(Options opt);
+int opt_invalid(Options *opt);
 
 #endif
