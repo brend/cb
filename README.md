@@ -40,3 +40,6 @@ $ cb sample.cb
 
 Executed without any arguments, `cb` will read from standard input.
 
+```
+$ echo "17 + 4" | cb
+```
