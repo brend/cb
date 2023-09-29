@@ -92,6 +92,10 @@ void print_type(Type t) {
   }
 }
 
+int type_is_undefined(Type t) {
+  return t.type == TY_UNDEFINED;
+}
+
 int is_number(Type t) {
   return t.type == TY_NUMBER;
 }

@@ -20,4 +20,6 @@ Type typecheck(AST *ast);
 
 void print_type(Type t);
 
+int type_is_undefined(Type t);
+
 #endif

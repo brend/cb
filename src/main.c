@@ -71,21 +71,28 @@ int evaluate_file(Options *opt, FILE *file) {
   if (opt->verbose) {
 	  print_ast(ast);
 	  printf("\n");
-
-    Type type = typecheck(ast);
-
     printf("=== typecheck ===\n");
-    print_type(type);
-    printf("\n");
-
-	  printf("=== evaluation ===\n");
   }
 
-	if (ast) {
-		Value v = evaluate(ast);
+  Type type = typecheck(ast);
 
-		printf("%ld\n", v.intValue);
-	}
+  if (opt->verbose) {
+    print_type(type);
+    printf("\n");
+  }
+
+  if (type_is_undefined(type)) {
+    ast_destroy(&ast);
+    return 800;
+  }
+
+  Value v = evaluate(ast);
+
+	if (opt->verbose) {
+    printf("=== evaluation ===\n");
+  }
+
+	printf("%ld\n", v.intValue);
 
 	ast_destroy(&ast);
 
