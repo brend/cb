@@ -43,6 +43,12 @@ Value evaluate(AST *ast) {
     case O_LT: 
       v.intValue = (v.intValue < w.intValue) ? 1 : 0;
       break;
+    case O_EQ:
+      v.intValue = (v.intValue == w.intValue) ? 1 : 0;
+      break;
+    case O_NE:
+      v.intValue = (v.intValue != w.intValue) ? 1 : 0;
+      break;
     case O_UNDEFINED:
       fprintf(stderr, "internal error: undefined operator\n");
       exit(-3);
