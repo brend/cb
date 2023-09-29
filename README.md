@@ -1,16 +1,16 @@
-# NL
+# cb
 a silly little programming language
 
 ## what 
-You know ML, the Meta Language? NL is a hobbyist's love letter
+You know ML, the Meta Language? cb is a hobbyist's love letter
 to that elegant functional programming language that inspired
 many a student.
 
 ## the name though?
-Consequently, NL could mean any number of things, such as
-- Nutty Language
-- Neta Language (+1 compared to Meta Language 🫤)
-- Not Likely (to succeed?)
+cb could mean any number of things, such as
+- code beauty
+- completely binary
+- cool beans
 
 Take your pick or insert your own! (pull request)
 
@@ -21,22 +21,22 @@ for the standard library.
 Maybe it'll be the scripting language for a computer game sometime, who knows!
 
 ## how
-NL is written in pure, fresh C. Compile by simply issuing `make`. A fragrant,
-toasty binary will be placed under `bin/nl`.
+cb is written in pure, fresh C. Compile by simply issuing `make`. A fragrant,
+toasty binary will be placed under `bin/cb`.
 
 ## some examples
 
 Evaluate expressions by using the `-e` switch:
 
 ```
-$ nl -e "if 3+4 > 5 then 1 else 0
+$ cb -e "if 3+4 > 5 then 1 else 0
 ```
 
 Evaluate a file:
 
 ```
-$ nl sample.nl
+$ cb sample.cb
 ```
 
-Executed without any arguments, `nl` will read from standard input.
+Executed without any arguments, `cb` will read from standard input.
 

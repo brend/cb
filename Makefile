@@ -1,4 +1,4 @@
-OUT = bin/nl
+OUT = bin/cb
 CC = cc
 CFLAGS = -Wall -g
 ODIR = obj

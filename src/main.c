@@ -9,19 +9,19 @@
 int evaluate_file(Options *opt, FILE *file);
 void show_usage(void);
 void show_help(void);
-int run_nl(Options *opt);
+int run_cb(Options *opt);
 
 int main(int argc, char** argv) {
   Options opt = opt_get(argc, argv);
 
-  int result = run_nl(&opt);
+  int result = run_cb(&opt);
 
   opt_destroy(&opt);
 
   return result;
 }
 
-int run_nl(Options *opt) {
+int run_cb(Options *opt) {
   if (opt_invalid(opt)) {
     show_usage();
     return -1;
@@ -93,7 +93,7 @@ int evaluate_file(Options *opt, FILE *file) {
 }
 
 void show_usage(void) {
-  printf("usage: %s \n", "nl");
+  printf("usage: %s \n", "cb");
 }
 
 void show_help(void) {
