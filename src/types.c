@@ -1,6 +1,6 @@
 #include "types.h"
 
-#define PRINT_AST_LOCATION(ast) fprintf(stderr, "type error in line %d, column %d: ", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1);
+#define PRINT_AST_LOCATION(ast, message) fprintf(stderr, "type error in line %d, column %d: %s\n", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1, message);
 
 static const Type TYPE_UNDEFINED = {0};
 static const Type TYPE_NUMBER = {TY_NUMBER};
@@ -30,10 +30,13 @@ Type typecheck_if_expression(AST *ast) {
   Type t_alternative = typecheck(ast->if_statement.alternative);
 
   if (is_boolean(t_condition)) {
-    return lower_bound(t_consequence, t_alternative);
+    Type lb = lower_bound(t_consequence, t_alternative);
+    if (lb.type == TY_UNDEFINED) {
+      PRINT_AST_LOCATION(ast, "incompatible types of 'then' and 'else' in 'if' expression");
+    }
+    return lb;
   } else {
-    PRINT_AST_LOCATION(ast->if_statement.condition);
-    fprintf(stderr, "\"if\" condition must be of type boolean\n");
+    PRINT_AST_LOCATION(ast->if_statement.condition, "\"if\" condition must be of type boolean");
     return TYPE_UNDEFINED;
   }
 }
@@ -50,6 +53,7 @@ Type typecheck_binary_expression(AST *ast) {
     if (is_number(t_left) && is_number(t_right)) {
       return TYPE_BOOLEAN;
     } else {
+      PRINT_AST_LOCATION(ast, "use of comparison operator with non-numeric argument");
       return TYPE_UNDEFINED;
     }
   case O_PL:
@@ -59,10 +63,11 @@ Type typecheck_binary_expression(AST *ast) {
     if (is_number(t_left) && is_number(t_right)) {
       return TYPE_NUMBER;
     } else {
+      PRINT_AST_LOCATION(ast, "use of arithmetic operator with non-numeric argument");
       return TYPE_UNDEFINED;
     }
   case O_UNDEFINED:
-    fprintf(stderr, "internal error: undefined operator\n");
+    PRINT_AST_LOCATION(ast, "internal error: undefined operator");
     return TYPE_UNDEFINED;
   }
 }
@@ -83,9 +88,6 @@ void print_type(Type t) {
     break;
   case TY_UNDEFINED:
     printf("UNDEFINED");
-    break;
-  default:
-    printf("???");
     break;
   }
 }
