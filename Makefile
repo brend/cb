@@ -6,7 +6,7 @@ BDIR = bin
 SDIR = src
 INC = -Iinc
 
-_OBJS = main.o stream.o lexer.o parser.o aux.o queue.o io.o interpreter.o opt.o
+_OBJS = main.o stream.o lexer.o parser.o aux.o queue.o io.o interpreter.o opt.o types.o
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 $(ODIR)/%.o: $(SDIR)/%.c | odir

@@ -4,6 +4,7 @@
 #include "interpreter.h"
 #include "opt.h"
 #include "aux.h"
+#include "types.h"
 
 int evaluate_file(Options *opt, FILE *file);
 void show_usage(void);
@@ -70,6 +71,13 @@ int evaluate_file(Options *opt, FILE *file) {
   if (opt->verbose) {
 	  print_ast(ast);
 	  printf("\n");
+
+    Type type = typecheck(ast);
+
+    printf("=== typecheck ===\n");
+    print_type(type);
+    printf("\n");
+
 	  printf("=== evaluation ===\n");
   }
 
