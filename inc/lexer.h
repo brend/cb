@@ -36,7 +36,8 @@ typedef struct {
 	Queue *buffer;
 } lexer;
 
-int token_destroy(token *);
+token *token_copy(token*);
+int token_destroy(token*);
 
 lexer *lexer_open_file(const char *filename);
 lexer *lexer_from_file(FILE *file);

@@ -2,6 +2,7 @@
 #define __PARSER_H__
 
 #include <stdio.h>
+#include "lexer.h"
 
 typedef enum {
   AST_UNDEFINED,
@@ -39,6 +40,8 @@ typedef struct {
 
 typedef struct AST {
     AST_TYPE type;
+    token *first_token;
+    token *last_token;
     union {
         long number;
         char symbol[64];

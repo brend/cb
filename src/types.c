@@ -1,5 +1,7 @@
 #include "types.h"
 
+#define PRINT_AST_LOCATION(ast) fprintf(stderr, "type error in line %d, column %d: ", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1);
+
 static const Type TYPE_UNDEFINED = {0};
 static const Type TYPE_NUMBER = {TY_NUMBER};
 static const Type TYPE_BOOLEAN = {TY_BOOLEAN};
@@ -30,6 +32,8 @@ Type typecheck_if_expression(AST *ast) {
   if (is_boolean(t_condition)) {
     return lower_bound(t_consequence, t_alternative);
   } else {
+    PRINT_AST_LOCATION(ast->if_statement.condition);
+    fprintf(stderr, "\"if\" condition must be of type boolean\n");
     return TYPE_UNDEFINED;
   }
 }

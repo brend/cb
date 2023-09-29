@@ -61,6 +61,13 @@ token *token_new(void) {
   return t;
 }
 
+token *token_copy(token *t) {
+  if (!t) { return NULL; }
+  token *copy = malloc(sizeof(token));
+  memcpy(copy, t, sizeof(token));
+  return copy;
+} 
+
 int token_destroy(token *t) {
   if (t) {
     free(t);

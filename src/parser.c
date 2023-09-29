@@ -1,5 +1,4 @@
 #include "parser.h"
-#include "lexer.h"
 #include "aux.h"
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +18,7 @@ AST *parse_factor_p(lexer *lexer, Operator *operator);
 AST *parse_atom(lexer *lexer);
 AST *parse_atom_number(token *token);
 AST *parse_atom_symbol(token *token);
-AST *parse_atom_if(lexer *lexer);
+AST *parse_atom_if(lexer *lexer, token *first_token);
 
 AST *fix_associativity(AST *ast);
 
@@ -34,6 +33,14 @@ int ast_destroy(AST **ast) {
     return 0;
   }
 
+  if ((*ast)->first_token) {
+    token_destroy((*ast)->first_token);
+    (*ast)->first_token = NULL;
+  }
+  if ((*ast)->last_token) {
+    token_destroy((*ast)->last_token);
+    (*ast)->last_token = NULL;
+  }
   switch ((*ast)->type) {
   case AST_NUMBER:
   case AST_SYMBOL:
@@ -87,6 +94,8 @@ AST *combine(Operator operator, AST *left, AST *right) {
   AST *b = ast_new();
 
   b->type = AST_BINARY;
+  b->first_token = token_copy(left->first_token);
+  b->last_token = token_copy(right->last_token);
   b->binary_expression.operator = operator;
   b->binary_expression.left = left;
   b->binary_expression.right = right;
@@ -233,6 +242,7 @@ AST *parse_atom(lexer *lexer) {
   }
 
   AST *ast = NULL;
+  token *first_token = NULL;
   
   switch (t->type) {
   case T_NU:
@@ -244,8 +254,9 @@ AST *parse_atom(lexer *lexer) {
     token_destroy(lexer_pop(lexer));
     return ast;
   case T_IF:
+    first_token = token_copy(t);
     token_destroy(lexer_pop(lexer));
-    ast = parse_atom_if(lexer);
+    ast = parse_atom_if(lexer, first_token);
     return ast;
   default:
     log_parserr(t, "Unexpected token of type %d: \"%s\"\n", t->type, t->text);
@@ -253,7 +264,7 @@ AST *parse_atom(lexer *lexer) {
   }
 }
 
-AST *parse_atom_if(lexer *lexer) {
+AST *parse_atom_if(lexer *lexer, token *first_token) {
   AST *condition = parse_expression(lexer);
   
   if (!condition) {
@@ -297,9 +308,12 @@ AST *parse_atom_if(lexer *lexer) {
     return NULL;
   }
 
+  token *last_token = token_copy(consequence->last_token);
   AST *ast = ast_new();
 
   ast->type = AST_IF;
+  ast->first_token = first_token;
+  ast->last_token = last_token;
   ast->if_statement.condition = condition;
   ast->if_statement.consequence = consequence;
   ast->if_statement.alternative = alternative;
@@ -312,6 +326,8 @@ AST *parse_atom_symbol(token *t) {
 
   ast->type = AST_SYMBOL;
   strncpy(ast->symbol, t->text, sizeof(ast->symbol));
+  ast->first_token = token_copy(t);
+  ast->last_token = token_copy(t);
 
   return ast;
 }
@@ -327,6 +343,8 @@ AST *parse_atom_number(token *t) {
   AST *ast = ast_new();
   ast->type = AST_NUMBER;
   ast->number = number;
+  ast->first_token = token_copy(t);
+  ast->last_token = token_copy(t);
 
   return ast;
 }
@@ -335,6 +353,12 @@ void print_ast(const AST* ast) {
   if (ast == NULL) {
     return;
   }
+
+  int line_start = ast->first_token ? ast->first_token->line : 0;
+  int col_start = ast->first_token ? ast->first_token->column : 0;
+  int line_end = ast->last_token ? ast->first_token->line : 0;
+  int col_end = ast->last_token ? ast->first_token->column : 0;
+  printf("@%d,%d..%d,%d ", line_start, col_start, line_end, col_end);
 
   if (ast->type == AST_NUMBER) {
     printf("NUMBER(%ld)", ast->number);
