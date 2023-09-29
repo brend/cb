@@ -97,5 +97,5 @@ void show_usage(void) {
 }
 
 void show_help(void) {
-  printf("help!");
+  printf("help will be coming soon!\n");
 }
