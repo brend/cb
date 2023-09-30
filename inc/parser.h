@@ -10,6 +10,10 @@ typedef enum {
   AST_SYMBOL,
   AST_IF,
 	AST_BINARY,
+
+  AST_STMT_EXP,
+  AST_STMT_ASN,
+  AST_STMT_SEQ
 } AST_TYPE;
 
 struct AST;
@@ -38,19 +42,22 @@ typedef struct {
   struct AST *right;
 } AST_BINARY_EXPRESSION;
 
+typedef struct {
+  char identifier[64];
+  struct AST *expression;
+} AST_ASSIGNMENT;
+
 typedef struct AST {
     AST_TYPE type;
     token *first_token;
     token *last_token;
     union {
-        long number;
-        char symbol[64];
-        AST_IF_STATEMENT if_statement;
-        AST_BINARY_EXPRESSION binary_expression;
-        struct {
-            int length;
-            struct AST **items;
-        } *list;
+      long number;
+      char symbol[64];
+      AST_IF_STATEMENT if_statement;
+      AST_BINARY_EXPRESSION binary_expression;
+      AST_ASSIGNMENT assignment;
+      struct AST *expression;
     };
 } AST;
 

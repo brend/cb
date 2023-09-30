@@ -6,7 +6,8 @@
 typedef enum {
   TY_UNDEFINED,
   TY_NUMBER,
-  TY_BOOLEAN
+  TY_BOOLEAN,
+  TY_UNIT
 } TypeT;
 
 typedef struct {

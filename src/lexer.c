@@ -130,6 +130,7 @@ token *lexer_peek(lexer *lexer) {
   MATCHW("if", T_IF);
   MATCHW("then", T_TN);
   MATCHW("else", T_EL);
+  MATCHW("val", T_VL);
 
   strcpy(t->text, ID_BUFFER);
   queue_enqueue_ptr(lexer->buffer, t);

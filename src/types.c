@@ -1,4 +1,5 @@
 #include "types.h"
+#include <stdlib.h>
 
 //#define SET_ERROR(ast, message) fprintf(stderr, "type error in line %d, column %d: %s\n", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1, message);
 #define SET_ERROR(ast, message) snprintf(ERROR_BUFFER, sizeof(ERROR_BUFFER), "type error in line %d, column %d: %s\n", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1, message);
@@ -7,11 +8,15 @@
 static const Type TYPE_UNDEFINED = {0};
 static const Type TYPE_NUMBER = {TY_NUMBER};
 static const Type TYPE_BOOLEAN = {TY_BOOLEAN};
+static const Type TYPE_UNIT = {TY_UNIT};
 
 static char ERROR_BUFFER[4096] = {0};
 
 Type typecheck_binary_expression(AST*);
 Type typecheck_if_expression(AST*);
+Type typecheck_expression_statement(AST*);
+Type typecheck_assignment(AST*);
+Type typecheck_sequence(AST*);
 Type lower_bound(Type s, Type t);
 int is_number(Type);
 int is_boolean(Type);
@@ -31,6 +36,15 @@ Type typecheck(AST *ast) {
     return typecheck_binary_expression(ast);
   case AST_IF:
     return typecheck_if_expression(ast);
+  case AST_STMT_EXP:
+    return typecheck_expression_statement(ast);
+  case AST_STMT_ASN:
+    return typecheck_assignment(ast);
+  case AST_STMT_SEQ:
+    return typecheck_sequence(ast);
+  case AST_UNDEFINED:
+    SET_ERROR(ast, "internal error: ast type undefined");
+    return TYPE_UNDEFINED;
   }
 }
 
@@ -88,6 +102,22 @@ Type lower_bound(Type s, Type t) {
   return TYPE_UNDEFINED;
 }
 
+Type typecheck_expression_statement(AST *ast) {
+  Type ty = typecheck(ast->expression);
+  return type_is_undefined(ty) ? ty : TYPE_UNIT;
+}
+
+Type typecheck_assignment(AST *ast) {
+  Type et = typecheck(ast->assignment.expression);
+  // TODO: Modify type environment
+  return type_is_undefined(et) ? et : TYPE_UNIT;
+}
+
+Type typecheck_sequence(AST *ast) {
+  // TODO: Implement typecheck_sequence
+  exit(17);
+}
+
 void print_type(Type t) {
   switch (t.type) {
   case TY_NUMBER:
@@ -95,6 +125,9 @@ void print_type(Type t) {
     break;
   case TY_BOOLEAN:
     printf("BOOLEAN");
+    break;
+  case TY_UNIT:
+    printf("UNIT");
     break;
   case TY_UNDEFINED:
     printf("UNDEFINED");

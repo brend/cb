@@ -19,6 +19,10 @@ AST *parse_atom(lexer *lexer);
 AST *parse_atom_number(token *token);
 AST *parse_atom_symbol(token *token);
 AST *parse_atom_if(lexer *lexer, token *first_token);
+AST *parse_statement(lexer*);
+AST *parse_assignment(lexer*);
+AST *parse_sequence(lexer*);
+AST *parse_expression_statement(lexer*);
 
 AST *fix_associativity(AST *ast);
 
@@ -54,9 +58,15 @@ int ast_destroy(AST **ast) {
     if (!ast_destroy(&(*ast)->binary_expression.left)) { return 0; }
     if (!ast_destroy(&(*ast)->binary_expression.right)) { return 0; }
     break;
-  default:
-    fprintf(stderr, "internal error in ast_destroy: unhandled ast type %d\n", (*ast)->type);
-    exit(91);
+  case AST_STMT_EXP:
+    if (!ast_destroy(&(*ast)->expression)) { return 0; }
+    break;
+  case AST_STMT_ASN:
+    if (!ast_destroy(&(*ast)->assignment.expression)) { return 0; }
+    break;
+  case AST_STMT_SEQ:
+    // TODO Handle destruction of sequence
+    break;
   }
 
   free(*ast);
@@ -68,7 +78,8 @@ int ast_destroy(AST **ast) {
 AST *parse(lexer *lexer) {
     if (!lexer) { return NULL; }
     
-    AST *ast = parse_expression(lexer);
+    //AST *ast = parse_expression(lexer);
+    AST *ast = parse_statement(lexer);
     
     if (ast) {
       ast = fix_associativity(ast);
@@ -109,6 +120,10 @@ AST *fix_associativity(AST *ast) {
   switch (ast->type) {
   case AST_NUMBER:
   case AST_SYMBOL:
+  case AST_STMT_EXP:
+  case AST_STMT_ASN:
+  case AST_STMT_SEQ:
+    // TODO: Fix assoc for statements, once algorithm is correct
     return ast;
   case AST_IF:
     ast->if_statement.condition = fix_associativity(ast->if_statement.condition);
@@ -135,10 +150,83 @@ AST *fix_associativity(AST *ast) {
     ast->binary_expression.left = fix_associativity(ast->binary_expression.left);
 
     return ast;
-  default:
-    fprintf(stderr, "internal error during associativity fix: unhandled ast type %d\n", ast->type);
-    exit(91);
   }
+}
+
+AST *parse_statement(lexer *lexer) {
+  token *t = lexer_peek(lexer);
+
+  if (!t) { return NULL; }
+
+  switch (t->type) {
+  case T_VL:
+    return parse_assignment(lexer);
+  default:
+    return parse_expression_statement(lexer);
+  }
+}
+
+AST *parse_expression_statement(lexer *lexer) {
+  AST *expression = parse_expression(lexer);
+
+  if (!expression) { return NULL; }
+
+  AST *ast = ast_new();
+
+  ast->type = AST_STMT_EXP;
+  ast->first_token = token_copy(expression->first_token);
+  ast->last_token = token_copy(expression->last_token);
+  ast->expression = expression;
+  return ast;
+}
+
+AST *parse_assignment(lexer *lexer) {
+  token *t_val = lexer_pop(lexer);
+  if (!(t_val && t_val->type == T_VL)) {
+    log_parserr(t_val, "internal error: expected \"val\"");
+    token_destroy(t_val);
+    return NULL;
+  }
+
+  token *t_id = lexer_peek(lexer);
+  
+  if (!(t_id && t_id->type == T_ID)) {
+    log_parserr(t_id, "expected: identifier");
+    token_destroy(t_val);
+    token_destroy(t_id);
+    return NULL;
+  }
+
+  token *t_eq = lexer_pop(lexer);
+
+  if (!(t_eq && t_eq->type == T_EQ)) {
+    log_parserr(t_eq, "expected: \"=\"");
+    token_destroy(t_val);
+    token_destroy(t_id);
+    token_destroy(t_eq);
+  }
+
+  AST *expression = parse_expression(lexer);
+
+  if (!expression) {
+    log_parserr(t_eq, "failed to parse assignment expression");
+    token_destroy(t_val);
+    token_destroy(t_id);
+    token_destroy(t_eq);
+    return NULL;
+  }
+
+  AST *ast = ast_new();
+  ast->type = AST_STMT_ASN;
+  ast->first_token = t_val;
+  ast->last_token = token_copy(expression->last_token);
+  strncpy(ast->assignment.identifier, t_id->text, sizeof(ast->assignment.identifier));
+  ast->assignment.expression = expression;
+  
+  token_destroy(t_id);
+  token_destroy(t_eq);
+
+  return ast;
 }
 
 AST *parse_expression(lexer *lexer) {
@@ -358,17 +446,17 @@ void print_ast(const AST* ast) {
   int col_start = ast->first_token ? ast->first_token->column : 0;
   int line_end = ast->last_token ? ast->first_token->line : 0;
   int col_end = ast->last_token ? ast->first_token->column : 0;
-  printf("@%d,%d..%d,%d ", line_start, col_start, line_end, col_end);
 
-  if (ast->type == AST_NUMBER) {
+  //printf("@%d,%d..%d,%d ", line_start, col_start, line_end, col_end);
+
+  switch (ast->type) {
+  case AST_NUMBER:
     printf("NUMBER(%ld)", ast->number);
-  }
-
-  if (ast->type == AST_SYMBOL) {
+    break;
+  case AST_SYMBOL:
     printf("SYMBOL(%s)", ast->symbol);
-  }
-
-  if (ast->type == AST_BINARY) {
+    break; 
+  case AST_BINARY:
     printf("(");
     print_ast(ast->binary_expression.left);
     switch (ast->binary_expression.operator) {
@@ -382,9 +470,8 @@ void print_ast(const AST* ast) {
     }
     print_ast(ast->binary_expression.right);
     printf(")");
-  }
-
-  if (ast->type == AST_IF) {
+    break;
+  case AST_IF:
     printf("[IF ");
     print_ast(ast->if_statement.condition);
     printf(" THEN ");
@@ -392,5 +479,20 @@ void print_ast(const AST* ast) {
     printf(" ELSE ");
     print_ast(ast->if_statement.alternative);
     printf("]");
+    break;
+  case AST_STMT_EXP:
+    printf("<");
+    print_ast(ast->expression);
+    printf(">");
+    break;
+  case AST_STMT_SEQ:
+    // TODO: Implement print_ast AST_STMT_SEQ
+    printf("<TODO: Implement AST_STMT_SEQ printing>");
+    break;
+  case AST_STMT_ASN:
+    printf("<%s = ", ast->assignment.identifier);
+    print_ast(ast->assignment.expression);
+    printf(">");
+    break;
   }
 }

@@ -54,9 +54,15 @@ Value evaluate(AST *ast) {
       exit(-3);
     }
     break;
-  default:
-    fprintf(stderr, "Unknown expression type: %d\n", ast->type);
-    exit(-2);
+  case AST_STMT_EXP:
+    v = evaluate(ast->expression);
+    break;
+  case AST_STMT_ASN:
+    // TODO: Handle assignment evaluation
+    break;
+  case AST_STMT_SEQ:
+    // TODO: Handle sequence evaluation
+    break;
   }
 
   return v;

@@ -21,7 +21,8 @@ typedef enum {
 	T_NU,
 	T_IF,
 	T_TN,
-	T_EL
+	T_EL,
+  T_VL
 } token_type;
 
 typedef struct {
