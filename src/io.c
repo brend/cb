@@ -22,6 +22,18 @@ void print_token(token *t) {
 			case T_MI:
 			printf("MINUS");
 			break;
+      case T_MU:
+      printf("MUL");
+      break;
+      case T_DI:
+      printf("DIV");
+      break;
+      case T_EQ:
+      printf("EQ");
+      break;
+      case T_NE:
+      printf("NEQ");
+      break;
 			case T_GT:
 			printf("GT");
 			break;
@@ -43,8 +55,17 @@ void print_token(token *t) {
 			case T_NU:
 			printf("NUMBER");
 			break;
-			default:
-			printf("EOF");
+      case T_LP:
+      printf("LP");
+      break;
+      case T_RP:
+      printf("RP");
+      break;
+      case T_VL:
+      printf("VL");
+      break;
+			case T_IV:
+			printf("INVALID");
 			break;			
 		}
 

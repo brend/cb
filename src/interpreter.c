@@ -63,6 +63,9 @@ Value evaluate(AST *ast) {
   case AST_STMT_SEQ:
     // TODO: Handle sequence evaluation
     break;
+  case AST_UNDEFINED:
+    fprintf(stderr, "internal error: undefined ast type\n");
+    exit(-4);
   }
 
   return v;

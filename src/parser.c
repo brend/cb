@@ -188,7 +188,7 @@ AST *parse_assignment(lexer *lexer) {
     return NULL;
   }
 
-  token *t_id = lexer_peek(lexer);
+  token *t_id = lexer_pop(lexer);
   
   if (!(t_id && t_id->type == T_ID)) {
     log_parserr(t_id, "expected: identifier");
