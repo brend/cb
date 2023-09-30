@@ -29,17 +29,20 @@ toasty binary will be placed under `bin/cb`.
 Evaluate expressions by using the `-e` switch:
 
 ```
-$ cb -e "if 3+4 > 5 then 1 else 0
+$ cb -e "if 3+4 > 5 then 1 else 0"
+1
 ```
 
 Evaluate a file:
 
 ```
 $ cb sample.cb
+34
 ```
 
 Executed without any arguments, `cb` will read from standard input.
 
 ```
 $ echo "17 + 4" | cb
+21
 ```
