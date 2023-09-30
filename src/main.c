@@ -75,6 +75,11 @@ int evaluate_file(Options *opt, FILE *file) {
   }
 
   Type type = typecheck(ast);
+  const char *type_error = typecheck_last_error();
+
+  if (type_error) {
+    fprintf(stderr, "%s\n", type_error);
+  }  
 
   if (opt->verbose) {
     print_type(type);

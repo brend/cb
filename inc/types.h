@@ -17,9 +17,8 @@ typedef struct {
 } Tenv;
 
 Type typecheck(AST *ast);
-
+const char *typecheck_last_error();
 void print_type(Type t);
-
 int type_is_undefined(Type t);
 
 #endif

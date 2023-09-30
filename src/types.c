@@ -1,10 +1,14 @@
 #include "types.h"
 
-#define PRINT_AST_LOCATION(ast, message) fprintf(stderr, "type error in line %d, column %d: %s\n", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1, message);
+//#define SET_ERROR(ast, message) fprintf(stderr, "type error in line %d, column %d: %s\n", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1, message);
+#define SET_ERROR(ast, message) snprintf(ERROR_BUFFER, sizeof(ERROR_BUFFER), "type error in line %d, column %d: %s\n", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1, message);
+#define CLEAR_ERROR() ERROR_BUFFER[0] = '\0';
 
 static const Type TYPE_UNDEFINED = {0};
 static const Type TYPE_NUMBER = {TY_NUMBER};
 static const Type TYPE_BOOLEAN = {TY_BOOLEAN};
+
+static char ERROR_BUFFER[4096] = {0};
 
 Type typecheck_binary_expression(AST*);
 Type typecheck_if_expression(AST*);
@@ -12,7 +16,13 @@ Type lower_bound(Type s, Type t);
 int is_number(Type);
 int is_boolean(Type);
 
+const char *typecheck_last_error() {
+  return ERROR_BUFFER;
+}
+
 Type typecheck(AST *ast) {
+  CLEAR_ERROR();
+
   if (!ast) { return TYPE_UNDEFINED; }
   switch (ast->type) {
   case AST_NUMBER:
@@ -32,11 +42,11 @@ Type typecheck_if_expression(AST *ast) {
   if (is_boolean(t_condition)) {
     Type lb = lower_bound(t_consequence, t_alternative);
     if (lb.type == TY_UNDEFINED) {
-      PRINT_AST_LOCATION(ast, "incompatible types of 'then' and 'else' in 'if' expression");
+      SET_ERROR(ast, "incompatible types of 'then' and 'else' in 'if' expression");
     }
     return lb;
   } else {
-    PRINT_AST_LOCATION(ast->if_statement.condition, "\"if\" condition must be of type boolean");
+    SET_ERROR(ast->if_statement.condition, "\"if\" condition must be of type boolean");
     return TYPE_UNDEFINED;
   }
 }
@@ -53,7 +63,7 @@ Type typecheck_binary_expression(AST *ast) {
     if (is_number(t_left) && is_number(t_right)) {
       return TYPE_BOOLEAN;
     } else {
-      PRINT_AST_LOCATION(ast, "use of comparison operator with non-numeric argument");
+      SET_ERROR(ast, "use of comparison operator with non-numeric argument");
       return TYPE_UNDEFINED;
     }
   case O_PL:
@@ -63,11 +73,11 @@ Type typecheck_binary_expression(AST *ast) {
     if (is_number(t_left) && is_number(t_right)) {
       return TYPE_NUMBER;
     } else {
-      PRINT_AST_LOCATION(ast, "use of arithmetic operator with non-numeric argument");
+      SET_ERROR(ast, "use of arithmetic operator with non-numeric argument");
       return TYPE_UNDEFINED;
     }
   case O_UNDEFINED:
-    PRINT_AST_LOCATION(ast, "internal error: undefined operator");
+    SET_ERROR(ast, "internal error: undefined operator");
     return TYPE_UNDEFINED;
   }
 }
@@ -103,3 +113,4 @@ int is_number(Type t) {
 int is_boolean(Type t) {
   return t.type == TY_BOOLEAN;
 }
+
