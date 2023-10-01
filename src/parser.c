@@ -185,47 +185,30 @@ AST *parse_statement(lexer *lexer) {
 }
 
 AST *parse_sequence(lexer *lexer) {
-  AST *seq = ast_new();
-  seq->type = AST_STMT_SEQ;
-  seq->sequence = NULL;
+  AST *ast = ast_new();
+  ast->type = AST_STMT_SEQ;
+  ast->sequence = NULL;
 
-  AST_SEQUENCE *current = NULL;
-  AST_SEQUENCE *new = NULL;
   AST *statement = NULL;
 
   while (lexer_peek(lexer)) {
     statement = parse_statement(lexer);
-
-    if (!statement) {
-      log_parserr(lexer_peek(lexer), "failed to parse statement");
-      ast_destroy(&seq);
-      return NULL;
+    if (!ast->sequence) {
+      ast->sequence = malloc(sizeof(AST_SEQUENCE));
+      ast->sequence->statement = statement;
+      ast->sequence->next = NULL;
+    } else {
+      AST_SEQUENCE *seq = ast->sequence;
+      while (seq->next) {
+        seq = seq->next;
+      }
+      seq->next = malloc(sizeof(AST_SEQUENCE));
+      seq->next->statement = statement;
+      seq->next->next = NULL;
     }
-
-    if (!seq->first_token) { 
-      seq->first_token = token_copy(statement->first_token); 
-    }
-
-    new = malloc(sizeof(AST_SEQUENCE));
-    new->statement = statement;
-    new->next = NULL;
-
-    if (current) {
-      current->next = new;
-    }
-
-    if (!seq->sequence) {
-      seq->sequence = current;
-    }
-
-    current = new;
   }
 
-  if (statement) {
-    seq->last_token = token_copy(statement->last_token);
-  }
-
-  return seq;
+  return ast;
 }
 
 AST *parse_expression_statement(lexer *lexer) {
