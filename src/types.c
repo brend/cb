@@ -123,8 +123,16 @@ Type typecheck_assignment(Tenv *tenv, AST *ast) {
 }
 
 Type typecheck_sequence(Tenv *tenv, AST *ast) {
-  // TODO: Implement typecheck_sequence
-  exit(17);
+  AST_SEQUENCE *seq = ast->sequence;
+  Type ty = TYPE_UNDEFINED;
+  while (seq) {
+    ty = typecheck(tenv, seq->statement);
+    if (type_is_undefined(ty)) {
+      break;
+    }
+    seq = seq->next;
+  }
+  return ty;
 }
 
 void print_type(Type t) {
