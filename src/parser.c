@@ -391,6 +391,18 @@ AST *parse_atom(lexer *lexer) {
     token_destroy(lexer_pop(lexer));
     ast = parse_atom_if(lexer, first_token);
     return ast;
+  case T_LP:
+    token_destroy(lexer_pop(lexer));
+    ast = parse_expression(lexer);
+    t = lexer_pop(lexer);
+    if (!(t && t->type == T_RP)) {
+      log_parserr(t, "Expected ')'\n");
+      token_destroy(t);
+      ast_destroy(&ast);
+      return NULL;
+    }
+    token_destroy(t);
+    return ast;
   default:
     log_parserr(t, "Unexpected token of type %d: \"%s\"\n", t->type, t->text);
     return NULL;
