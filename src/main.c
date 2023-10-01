@@ -95,15 +95,18 @@ int evaluate_file(Options *opt, FILE *file) {
 
   tenv_destroy(&tenv);
 
-  Value v = evaluate(ast);
+  Venv *venv = venv_new(100);
+  Value v = evaluate(venv, ast);
 
 	if (opt->verbose) {
     printf("=== evaluation ===\n");
+    venv_print(venv);
   }
 
 	printf("%ld\n", v.intValue);
 
 	ast_destroy(&ast);
+  venv_destroy(&venv);
 
   return 0;
 }
