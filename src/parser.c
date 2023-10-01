@@ -21,7 +21,7 @@ AST *parse_atom_symbol(token *token);
 AST *parse_atom_if(lexer *lexer, token *first_token);
 AST *parse_statement(lexer*);
 AST *parse_assignment(lexer*);
-AST *parse_sequence(lexer*);
+AST *parse_sequence(lexer*, AST*);
 AST *parse_expression_statement(lexer*);
 
 AST *fix_associativity(AST *ast);
@@ -30,6 +30,23 @@ AST *ast_new(void) {
   AST *ast = malloc(sizeof(AST));
   memset(ast, 0, sizeof(AST));
   return ast;
+}
+
+int ast_destroy_sequence(AST_SEQUENCE **seq) {
+  if (!(seq && *seq)) { return 0; }
+
+  if ((*seq)->next) {
+    ast_destroy_sequence(&(*seq)->next);
+  }
+
+  if ((*seq)->statement) {
+    ast_destroy(&(*seq)->statement);
+  }
+
+  free(seq);
+  *seq = NULL;
+
+  return 1; 
 }
 
 int ast_destroy(AST **ast) {
@@ -66,7 +83,9 @@ int ast_destroy(AST **ast) {
     if (!ast_destroy(&(*ast)->assignment.expression)) { return 0; }
     break;
   case AST_STMT_SEQ:
-    // TODO Handle destruction of sequence
+    if (!ast_destroy_sequence(&(*ast)->sequence)) { return 0; }
+    free((*ast)->sequence);
+    (*ast)->sequence = NULL;
     break;
   }
 
@@ -160,12 +179,41 @@ AST *parse_statement(lexer *lexer) {
 
   if (!t) { return NULL; }
 
+  AST *statement = NULL;
+
   switch (t->type) {
   case T_VL:
     return parse_assignment(lexer);
   default:
-    return parse_expression_statement(lexer);
+    statement = parse_expression_statement(lexer);
+
+    if  (statement && statement->type != AST_UNDEFINED && lexer_peek(lexer)) {
+      return parse_sequence(lexer, statement);
+    } else {
+      return statement;
+    }
   }
+}
+
+AST *parse_sequence(lexer *lexer, AST *first_statement) {
+  AST *seq = ast_new();
+  seq->type = AST_STMT_SEQ;
+  seq->first_token = token_copy(first_statement->first_token);
+  seq->sequence = malloc(sizeof(AST_SEQUENCE));
+  seq->sequence->statement = first_statement;
+  seq->sequence->next = NULL;
+
+  AST_SEQUENCE *current = seq->sequence;
+
+  while (lexer_peek(lexer)) {
+    AST *statement = parse_statement(lexer);
+    current->next = malloc(sizeof(AST_SEQUENCE));
+    current->next->statement = statement;
+    current->next->next = NULL;
+    current = current->next;
+  }
+
+  return seq;
 }
 
 AST *parse_expression_statement(lexer *lexer) {
@@ -487,8 +535,16 @@ void print_ast(const AST* ast) {
     printf(">");
     break;
   case AST_STMT_SEQ:
-    // TODO: Implement print_ast AST_STMT_SEQ
-    printf("<TODO: Implement AST_STMT_SEQ printing>");
+    printf("<");
+    AST_SEQUENCE *seq = ast->sequence;
+    while (seq) {
+      print_ast(seq->statement);
+      seq = seq->next;
+      if (seq) {
+        printf("; ");
+      }
+    }
+    printf(">");
     break;
   case AST_STMT_ASN:
     printf("<%s = ", ast->assignment.identifier);

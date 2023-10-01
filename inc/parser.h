@@ -47,6 +47,11 @@ typedef struct {
   struct AST *expression;
 } AST_ASSIGNMENT;
 
+typedef struct AST_SEQUENCE {
+  struct AST *statement;
+  struct AST_SEQUENCE *next;
+} AST_SEQUENCE;
+
 typedef struct AST {
     AST_TYPE type;
     token *first_token;
@@ -58,6 +63,7 @@ typedef struct AST {
       AST_BINARY_EXPRESSION binary_expression;
       AST_ASSIGNMENT assignment;
       struct AST *expression;
+      AST_SEQUENCE *sequence;
     };
 } AST;
 
