@@ -93,8 +93,7 @@ int evaluate_file(Options *opt, FILE *file) {
     return 800;
   }
 
-  tenv_free(tenv);
-  tenv = NULL;
+  tenv_destroy(&tenv);
 
   Value v = evaluate(ast);
 

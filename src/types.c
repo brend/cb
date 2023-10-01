@@ -199,9 +199,11 @@ int tenv_pop(Tenv *tenv) {
   return 1;
 }
 
-void tenv_free(Tenv *tenv) {
-  free(tenv->entries);
-  free(tenv);
+void tenv_destroy(Tenv **tenv) {
+  if (!(tenv && *tenv)) { return; }
+  free((*tenv)->entries);
+  free(*tenv);
+  *tenv = NULL;
 }
 
 void tenv_print(Tenv *tenv) {
