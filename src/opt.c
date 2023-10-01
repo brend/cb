@@ -11,7 +11,7 @@ Options opt_get(int argc, char **argv) {
 
   for (int i = 1; i < argc; ++i) {
     if (use_expression) {
-      options.expression = malloc(strlen(argv[i]));
+      options.expression = malloc(strlen(argv[i]) + 1);
       strcpy(options.expression, argv[i]);
       use_expression = 0;
       continue;
