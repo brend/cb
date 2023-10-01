@@ -48,6 +48,7 @@ int ast_destroy(AST **ast) {
   switch ((*ast)->type) {
   case AST_NUMBER:
   case AST_SYMBOL:
+  case AST_UNDEFINED:
     break;
   case AST_IF:
     if (!ast_destroy(&(*ast)->if_statement.condition)) { return 0; }
@@ -123,6 +124,7 @@ AST *fix_associativity(AST *ast) {
   case AST_STMT_EXP:
   case AST_STMT_ASN:
   case AST_STMT_SEQ:
+  case AST_UNDEFINED:
     // TODO: Fix assoc for statements, once algorithm is correct
     return ast;
   case AST_IF:
@@ -442,11 +444,10 @@ void print_ast(const AST* ast) {
     return;
   }
 
-  int line_start = ast->first_token ? ast->first_token->line : 0;
-  int col_start = ast->first_token ? ast->first_token->column : 0;
-  int line_end = ast->last_token ? ast->first_token->line : 0;
-  int col_end = ast->last_token ? ast->first_token->column : 0;
-
+  // int line_start = ast->first_token ? ast->first_token->line : 0;
+  // int col_start = ast->first_token ? ast->first_token->column : 0;
+  // int line_end = ast->last_token ? ast->first_token->line : 0;
+  // int col_end = ast->last_token ? ast->first_token->column : 0;
   //printf("@%d,%d..%d,%d ", line_start, col_start, line_end, col_end);
 
   switch (ast->type) {
@@ -493,6 +494,9 @@ void print_ast(const AST* ast) {
     printf("<%s = ", ast->assignment.identifier);
     print_ast(ast->assignment.expression);
     printf(">");
+    break;
+  case AST_UNDEFINED:
+    printf("<UNDEFINED>");
     break;
   }
 }

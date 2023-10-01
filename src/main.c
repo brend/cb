@@ -74,7 +74,9 @@ int evaluate_file(Options *opt, FILE *file) {
     printf("=== typecheck ===\n");
   }
 
-  Type type = typecheck(ast);
+  Tenv *tenv = tenv_new(100);
+  Type type = typecheck(tenv, ast);
+  tenv_print(tenv);
   const char *type_error = typecheck_last_error();
 
   if (type_error) {
@@ -90,6 +92,9 @@ int evaluate_file(Options *opt, FILE *file) {
     ast_destroy(&ast);
     return 800;
   }
+
+  tenv_free(tenv);
+  tenv = NULL;
 
   Value v = evaluate(ast);
 
