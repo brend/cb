@@ -76,7 +76,7 @@ int evaluate_file(Options *opt, FILE *file) {
 
   Tenv *tenv = tenv_new(100);
   Type type = typecheck_ast(tenv, ast);
-  tenv_print(tenv);
+  
   const char *type_error = typecheck_last_error();
 
   if (type_error) {
@@ -84,6 +84,7 @@ int evaluate_file(Options *opt, FILE *file) {
   }  
 
   if (opt->verbose) {
+    tenv_print(tenv);
     print_type(type);
     printf("\n");
   }

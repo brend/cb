@@ -218,5 +218,5 @@ void tenv_print(Tenv *tenv) {
       printf("; ");
     }
   }
-  printf("%s}\n", tenv->size == 0 ? "}" : "\n");
+  printf("%s}\n", tenv->size == 0 ? "" : "\n");
 }

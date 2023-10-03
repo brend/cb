@@ -134,5 +134,5 @@ void venv_print(Venv *venv) {
       printf("; ");
     }
   }
-  printf("%s}\n", venv->size == 0 ? "}" : "\n");
+  printf("%s}\n", venv->size == 0 ? "" : "\n");
 }
