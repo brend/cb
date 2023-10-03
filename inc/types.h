@@ -1,31 +1,9 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
-#include "parser.h"
+#include "ast.h"
 
-typedef enum {
-  TY_UNDEFINED,
-  TY_NUMBER,
-  TY_BOOLEAN,
-  TY_UNIT
-} TypeT;
-
-typedef struct {
-  TypeT type;
-} Type;
-
-typedef struct {
-  const char *identifier;
-  Type type;
-} TenvEntry;
-
-typedef struct {
-  TenvEntry *entries;
-  int size;
-  int capacity;
-} Tenv;
-
-Type typecheck(Tenv *tenv, AST *ast);
+Type typecheck_ast(Tenv *tenv, AST *ast);
 const char *typecheck_last_error();
 void print_type(Type t);
 int type_is_undefined(Type t);

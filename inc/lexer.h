@@ -3,40 +3,7 @@
 
 #include <stdio.h>
 #include "stream.h"
-
-typedef enum {
-	T_IV,
-	T_PL,
-	T_MI,
-    T_MU,
-    T_DI,
-    T_EQ,
-    T_NE,
-	T_GT,
-	T_LT,
-	T_LP,
-	T_RP,
-	T_ID,
-	T_NU,
-	T_IF,
-	T_TN,
-	T_EL,
-  T_VL
-} TokenType;
-
-typedef struct {
-	TokenType type;
-	char text[64];
-	int line;
-	int column;
-} Token;
-
-typedef struct {
-	int capacity;
-	Token *tokens;
-	int token_count;
-	int current_token;
-} Lexer;
+#include "ast.h"
 
 int tvalid(Token);
 

@@ -27,9 +27,8 @@ const char *typecheck_last_error() {
 }
 
 Type typecheck(Tenv *tenv, AST *ast) {
-  CLEAR_ERROR();
-
   if (!ast) { return TYPE_UNDEFINED; }
+
   switch (ast->type) {
   case AST_NUMBER:
     return TYPE_NUMBER;
@@ -49,6 +48,11 @@ Type typecheck(Tenv *tenv, AST *ast) {
     SET_ERROR(ast, "internal error: ast type undefined");
     return TYPE_UNDEFINED;
   }
+}
+
+Type typecheck_ast(Tenv *tenv, AST *ast) {
+  CLEAR_ERROR();
+  return (ast->type_info = typecheck(tenv, ast));
 }
 
 Type typecheck_if_expression(Tenv *tenv, AST *ast) {
