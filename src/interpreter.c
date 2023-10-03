@@ -98,7 +98,7 @@ int venv_push(Venv *venv, const char *identifier, Value value) {
 }
 
 Value venv_lookup(Venv *venv, const char *identifier) {
-  for (int i = venv->size - 1; i >= 0; i++) {
+  for (int i = venv->size - 1; i >= 0; i--) {
     if (strcmp(venv->entries[i].identifier, identifier) == 0) {
       return venv->entries[i].value;
     }

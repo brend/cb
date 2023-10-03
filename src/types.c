@@ -186,7 +186,7 @@ int tenv_push(Tenv *tenv, const char *identifier, Type type) {
 }
 
 Type tenv_lookup(Tenv *tenv, const char *identifier) {
-  for (int i = tenv->size - 1; i >= 0; i++) {
+  for (int i = tenv->size - 1; i >= 0; i--) {
     if (strcmp(tenv->entries[i].identifier, identifier) == 0) {
       return tenv->entries[i].type;
     }
