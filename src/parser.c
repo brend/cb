@@ -10,11 +10,8 @@
 
 AST *parse_expression(lexer *lexer);
 AST *parse_comparison(lexer *lexer);
-AST *parse_comparison_p(lexer *lexer, Operator *operator);
 AST *parse_term(lexer *lexer);
-AST *parse_term_p(lexer *lexer, Operator *operator);
 AST *parse_factor(lexer *lexer);
-AST *parse_factor_p(lexer *lexer, Operator *operator);
 AST *parse_atom(lexer *lexer);
 AST *parse_atom_number(token *token);
 AST *parse_atom_symbol(token *token);
@@ -23,8 +20,6 @@ AST *parse_statement(lexer*);
 AST *parse_assignment(lexer*);
 AST *parse_sequence(lexer*);
 AST *parse_expression_statement(lexer*);
-
-AST *fix_associativity(AST *ast);
 
 AST *ast_new(void) {
   AST *ast = malloc(sizeof(AST));
@@ -96,13 +91,7 @@ int ast_destroy(AST **ast) {
 AST *parse(lexer *lexer) {
     if (!lexer) { return NULL; }
     
-    AST *ast = parse_sequence(lexer);
-    
-    if (ast) {
-      ast = fix_associativity(ast);
-    }
-
-    return ast;
+    return parse_sequence(lexer);
 }
 
 AST *parse_file(FILE *file) {
@@ -114,61 +103,6 @@ AST *parse_file(FILE *file) {
   lexer_destroy(&lexer);
 
   return ast;
-}
-
-AST *combine(Operator operator, AST *left, AST *right) {
-  if (!right) return left;
-
-  AST *b = ast_new();
-
-  b->type = AST_BINARY;
-  b->first_token = token_copy(left->first_token);
-  b->last_token = token_copy(right->last_token);
-  b->binary_expression.operator = operator;
-  b->binary_expression.left = left;
-  b->binary_expression.right = right;
-  
-  return b;
-}
-
-AST *fix_associativity(AST *ast) {
-  if (!ast) { return NULL; }
-
-  switch (ast->type) {
-  case AST_NUMBER:
-  case AST_SYMBOL:
-  case AST_STMT_EXP:
-  case AST_STMT_ASN:
-  case AST_STMT_SEQ:
-  case AST_UNDEFINED:
-    // TODO: Fix assoc for statements, once algorithm is correct
-    return ast;
-  case AST_IF:
-    ast->if_statement.condition = fix_associativity(ast->if_statement.condition);
-    ast->if_statement.consequence = fix_associativity(ast->if_statement.consequence);
-    ast->if_statement.alternative = fix_associativity(ast->if_statement.alternative);
-    return ast;
-	case AST_BINARY:
-    ast->binary_expression.right = fix_associativity(ast->binary_expression.right);
-
-    Operator operator = ast->binary_expression.operator;
-
-    if ((operator == O_MI || operator == O_DI) && 
-        ast->binary_expression.right->type == AST_BINARY &&
-        ast->binary_expression.right->binary_expression.operator == operator
-    ) {
-      AST *right = ast->binary_expression.right;
-
-      ast->binary_expression.right = right->binary_expression.right;
-      right->binary_expression.right = right->binary_expression.left;
-      right->binary_expression.left = ast->binary_expression.left;
-      ast->binary_expression.left = right;
-    }
-
-    ast->binary_expression.left = fix_associativity(ast->binary_expression.left);
-
-    return ast;
-  }
 }
 
 AST *parse_statement(lexer *lexer) {
@@ -282,86 +216,97 @@ AST *parse_expression(lexer *lexer) {
   return ast;
 }
 
+Operator comparison_operator(token *t) {
+  if (!t) { return 0; }
+
+  switch (t->type) {
+  case T_GT: return O_GT;
+  case T_LT: return O_LT;
+  default:
+    return 0;
+  }
+}
+
 AST *parse_comparison(lexer *lexer) {
   if (!lexer) { return NULL; }
 
-  Operator operator = 0;
   AST *term = parse_term(lexer);
-  AST *comparison_p = parse_comparison_p(lexer, &operator);
+  Operator op = 0;
+
+  while (lexer_peek(lexer) && (op = comparison_operator(lexer_peek(lexer)))) {
+    token_destroy(lexer_pop(lexer));
+    AST *term2 = parse_term(lexer);
+    AST *ast = ast_new();
+    ast->type = AST_BINARY;
+    ast->binary_expression.operator = op;
+    ast->binary_expression.left = term;
+    ast->binary_expression.right = term2;
+    ast->first_token = token_copy(term->first_token);
+    ast->last_token = token_copy(term2->last_token);
+    term = ast;
+  }
   
-  return combine(operator, term, comparison_p);
+  return term;
 }
 
-AST *parse_comparison_p(lexer *lexer, Operator *operator) {
-  if (!lexer) { return NULL; }
-
-  token *t = lexer_peek(lexer);
-
-  if (!t) { return NULL; }
+Operator term_operator(token *t) {
+  if (!t) { return 0; }
 
   switch (t->type) {
-  case T_GT: *operator = O_GT; break;
-  case T_LT: *operator = O_LT; break;
+  case T_PL: return O_PL;
+  case T_MI: return O_MI;
   default:
-    return NULL;
+    return 0;
   }
-
-  token_destroy(lexer_pop(lexer));
-  Operator o2 = 0;
-  AST *term = parse_term(lexer);
-  AST *comparison_p = parse_comparison_p(lexer, &o2);
-  return combine(o2, term, comparison_p);
 }
 
 AST *parse_term(lexer *lexer) {
-  Operator operator = 0;
   AST *factor = parse_factor(lexer);
-  AST *term_p = parse_term_p(lexer, &operator);
-  return combine(operator, factor, term_p);
+  Operator op = 0;
+
+  while (lexer_peek(lexer) && (op = term_operator(lexer_peek(lexer)))) {
+    token_destroy(lexer_pop(lexer));
+    AST *factor2 = parse_factor(lexer);
+    AST *ast = ast_new();
+    ast->type = AST_BINARY;
+    ast->binary_expression.operator = op;
+    ast->binary_expression.left = factor;
+    ast->binary_expression.right = factor2;
+    ast->first_token = token_copy(factor->first_token);
+    ast->last_token = token_copy(factor2->last_token);
+    factor = ast;
+  }
+  
+  return factor;
 }
 
-AST *parse_term_p(lexer *lexer, Operator *operator) {
-  token *t = lexer_peek(lexer); 
-
-  if (!t) { return NULL; }
+Operator factor_operator(token *t) {
+  if (!t) { return 0; }
 
   switch (t->type) {
-  case T_PL: *operator = O_PL; break;
-  case T_MI: *operator = O_MI; break;
-  default: return NULL;
+  case T_MU: return O_MU;
+  case T_DI: return O_DI;
+  default:
+    return 0;
   }
-
-  token_destroy(lexer_pop(lexer));
-  Operator o2 = 0;
-  AST *factor = parse_factor(lexer);
-  AST *term_p = parse_term_p(lexer, &o2);
-
-  return combine(o2, factor, term_p);
 }
 
 AST *parse_factor(lexer *lexer) {
-  Operator operator = 0;
   AST *atom = parse_atom(lexer);
-  AST *factor_p = parse_factor_p(lexer, &operator);
-  return combine(operator, atom, factor_p);
-}
-
-AST *parse_factor_p(lexer *lexer, Operator *operator) {
-  token *t = lexer_peek(lexer); 
-
-  if (!t) { return NULL; }
-
-  switch (t->type) {
-  case T_MU: *operator = O_MU; break;
-  case T_DI: *operator = O_DI; break;
-  default: return NULL;
+  Operator op = 0;
+  while (lexer_peek(lexer) && (op = factor_operator(lexer_peek(lexer)))) {
+    token_destroy(lexer_pop(lexer));
+    AST *atom2 = parse_atom(lexer);
+    AST *ast = ast_new();
+    ast->type = AST_BINARY;
+    ast->binary_expression.operator = op;
+    ast->binary_expression.left = atom;
+    ast->binary_expression.right = atom2;
+    ast->first_token = token_copy(atom->first_token);
+    ast->last_token = token_copy(atom2->last_token);
+    atom = ast;
   }
-
-  token_destroy(lexer_pop(lexer));
-  Operator o2 = 0;
-  AST *atom = parse_atom(lexer);
-  AST *factor_p = parse_factor_p(lexer, &o2);
-  return combine(o2, atom, factor_p);
+  return atom;
 }
 
 AST *parse_atom(lexer *lexer) {
