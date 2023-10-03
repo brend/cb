@@ -11,7 +11,7 @@ void print_file(FILE *file) {
   printf("%s\n", buffer);
 }
 
-void print_token(token *t) {
+void print_token(Token *t) {
   if (!t) { printf("NULL"); return; }
 		printf("%s\t", t->text);
 				
@@ -73,30 +73,26 @@ void print_token(token *t) {
 }
 
 void print_tokens_from_file(FILE *file) {
-  lexer *lexer = lexer_from_file(file);
-  token *token;
+  Lexer *lexer = lexer_from_file(file);
+  Token token;
 
-  while ((token = lexer_pop(lexer)) && token->type != T_IV) {
-    print_token(token);
+  while ((token = lexer_pop(lexer)).type != T_IV) {
+    print_token(&token);
     printf("\n");
-    token_destroy(token);
   }
 
-  if (token) { token_destroy(token); }
   lexer_destroy(&lexer);
 }
 
 void print_tokens_from_expression(char *expression) {
-    lexer *lexer = lexer_from_expression(expression);
-    token *token;
-    
-    while ((token = lexer_pop(lexer)) && token->type != T_IV) {
-        print_token(token);
-        printf("\n");
-    token_destroy(token);
+  Lexer *lexer = lexer_from_expression(expression);
+  Token token;
+  
+  while ((token = lexer_pop(lexer)).type != T_IV) {
+    print_token(&token);
+    printf("\n");
   }
 
-  if (token) { token_destroy(token); }
   lexer_destroy(&lexer);
 }
 

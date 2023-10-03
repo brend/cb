@@ -3,23 +3,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define log_parserr(tk, ...) {fprintf(stderr, "error at %d:%d \"%s\": ", (tk) ? (tk)->line : -1, (tk) ? (tk)->column : -1, (tk) ? (tk)->text : "NULL");fprintf(stderr, __VA_ARGS__);}
+#define log_parserr(tk, ...) {fprintf(stderr, "error at %d:%d \"%s\": ", (tk).line, (tk).column, (tk).text); fprintf(stderr, __VA_ARGS__);}
 
 //#define log_debug(...) {printf("[%d] ", __LINE__); printf(__VA_ARGS__);}
 //int log_debug(const char *p, ...) { (void)p; return 0; }
 
-AST *parse_expression(lexer *lexer);
-AST *parse_comparison(lexer *lexer);
-AST *parse_term(lexer *lexer);
-AST *parse_factor(lexer *lexer);
-AST *parse_atom(lexer *lexer);
-AST *parse_atom_number(token *token);
-AST *parse_atom_symbol(token *token);
-AST *parse_atom_if(lexer *lexer, token *first_token);
-AST *parse_statement(lexer*);
-AST *parse_assignment(lexer*);
-AST *parse_sequence(lexer*);
-AST *parse_expression_statement(lexer*);
+AST *parse_expression(Lexer *lexer);
+AST *parse_comparison(Lexer *lexer);
+AST *parse_term(Lexer *lexer);
+AST *parse_factor(Lexer *lexer);
+AST *parse_atom(Lexer *lexer);
+AST *parse_atom_number(Token token);
+AST *parse_atom_symbol(Token token);
+AST *parse_atom_if(Lexer *lexer, Token first_token);
+AST *parse_statement(Lexer *);
+AST *parse_assignment(Lexer *);
+AST *parse_sequence(Lexer *);
+AST *parse_expression_statement(Lexer *);
 
 AST *ast_new(void) {
   AST *ast = malloc(sizeof(AST));
@@ -49,14 +49,6 @@ int ast_destroy(AST **ast) {
     return 0;
   }
 
-  if ((*ast)->first_token) {
-    token_destroy((*ast)->first_token);
-    (*ast)->first_token = NULL;
-  }
-  if ((*ast)->last_token) {
-    token_destroy((*ast)->last_token);
-    (*ast)->last_token = NULL;
-  }
   switch ((*ast)->type) {
   case AST_NUMBER:
   case AST_SYMBOL:
@@ -88,7 +80,7 @@ int ast_destroy(AST **ast) {
   return 1;
 }
 
-AST *parse(lexer *lexer) {
+AST *parse(Lexer *lexer) {
     if (!lexer) { return NULL; }
     
     return parse_sequence(lexer);
@@ -97,7 +89,7 @@ AST *parse(lexer *lexer) {
 AST *parse_file(FILE *file) {
   if (!file) { return NULL; }
 
-  lexer *lexer = lexer_from_file(file);
+  Lexer *lexer = lexer_from_file(file);
   AST *ast = parse(lexer);
 
   lexer_destroy(&lexer);
@@ -105,12 +97,10 @@ AST *parse_file(FILE *file) {
   return ast;
 }
 
-AST *parse_statement(lexer *lexer) {
-  token *t = lexer_peek(lexer);
+AST *parse_statement(Lexer *lexer) {
+  Token t = lexer_peek(lexer);
 
-  if (!t) { return NULL; }
-
-  switch (t->type) {
+  switch (t.type) {
   case T_VL:
     return parse_assignment(lexer);
   default:
@@ -118,14 +108,14 @@ AST *parse_statement(lexer *lexer) {
   }
 }
 
-AST *parse_sequence(lexer *lexer) {
+AST *parse_sequence(Lexer *lexer) {
   AST *ast = ast_new();
   ast->type = AST_STMT_SEQ;
   ast->sequence = NULL;
 
   AST *statement = NULL;
 
-  while (lexer_peek(lexer)) {
+  while (lexer_peek(lexer).type != T_IV) {
     statement = parse_statement(lexer);
     if (!ast->sequence) {
       ast->sequence = malloc(sizeof(AST_SEQUENCE));
@@ -145,7 +135,7 @@ AST *parse_sequence(lexer *lexer) {
   return ast;
 }
 
-AST *parse_expression_statement(lexer *lexer) {
+AST *parse_expression_statement(Lexer *lexer) {
   AST *expression = parse_expression(lexer);
 
   if (!expression) { return NULL; }
@@ -153,73 +143,58 @@ AST *parse_expression_statement(lexer *lexer) {
   AST *ast = ast_new();
 
   ast->type = AST_STMT_EXP;
-  ast->first_token = token_copy(expression->first_token);
-  ast->last_token = token_copy(expression->last_token);
+  ast->first_token = expression->first_token;
+  ast->last_token = expression->last_token;
   ast->expression = expression;
   return ast;
 }
 
-AST *parse_assignment(lexer *lexer) {
-  token *t_val = lexer_pop(lexer);
-  if (!(t_val && t_val->type == T_VL)) {
+AST *parse_assignment(Lexer *lexer) {
+  Token t_val = lexer_pop(lexer);
+  if (t_val.type != T_VL) {
     log_parserr(t_val, "internal error: expected \"val\"");
-    token_destroy(t_val);
     return NULL;
   }
 
-  token *t_id = lexer_pop(lexer);
+  Token t_id = lexer_pop(lexer);
   
-  if (!(t_id && t_id->type == T_ID)) {
+  if (t_id.type != T_ID) {
     log_parserr(t_id, "expected: identifier");
-    token_destroy(t_val);
-    token_destroy(t_id);
     return NULL;
   }
 
-  token *t_eq = lexer_pop(lexer);
+  Token t_eq = lexer_pop(lexer);
 
-  if (!(t_eq && t_eq->type == T_EQ)) {
+  if (t_eq.type != T_EQ) {
     log_parserr(t_eq, "expected: \"=\"");
-    token_destroy(t_val);
-    token_destroy(t_id);
-    token_destroy(t_eq);
+    return NULL;
   }
 
   AST *expression = parse_expression(lexer);
 
   if (!expression) {
     log_parserr(t_eq, "failed to parse assignment expression");
-    token_destroy(t_val);
-    token_destroy(t_id);
-    token_destroy(t_eq);
     return NULL;
   }
 
   AST *ast = ast_new();
   ast->type = AST_STMT_ASN;
   ast->first_token = t_val;
-  ast->last_token = token_copy(expression->last_token);
-  strncpy(ast->assignment.identifier, t_id->text, sizeof(ast->assignment.identifier));
+  ast->last_token = expression->last_token;
+  strncpy(ast->assignment.identifier, t_id.text, sizeof(ast->assignment.identifier));
   ast->assignment.expression = expression;
-  
-  token_destroy(t_id);
-  token_destroy(t_eq);
 
   return ast;
 }
 
-AST *parse_expression(lexer *lexer) {
+AST *parse_expression(Lexer *lexer) {
   if (!lexer) { return NULL; }
   
-  AST *ast = parse_comparison(lexer);
-
-  return ast;
+  return parse_comparison(lexer);
 }
 
-Operator comparison_operator(token *t) {
-  if (!t) { return 0; }
-
-  switch (t->type) {
+Operator comparison_operator(Token t) {
+  switch (t.type) {
   case T_GT: return O_GT;
   case T_LT: return O_LT;
   default:
@@ -227,32 +202,30 @@ Operator comparison_operator(token *t) {
   }
 }
 
-AST *parse_comparison(lexer *lexer) {
+AST *parse_comparison(Lexer *lexer) {
   if (!lexer) { return NULL; }
 
   AST *term = parse_term(lexer);
   Operator op = 0;
 
-  while (lexer_peek(lexer) && (op = comparison_operator(lexer_peek(lexer)))) {
-    token_destroy(lexer_pop(lexer));
+  while (lexer_peek(lexer).type != T_IV && (op = comparison_operator(lexer_peek(lexer)))) {
+    lexer_pop(lexer);
     AST *term2 = parse_term(lexer);
     AST *ast = ast_new();
     ast->type = AST_BINARY;
     ast->binary_expression.operator = op;
     ast->binary_expression.left = term;
     ast->binary_expression.right = term2;
-    ast->first_token = token_copy(term->first_token);
-    ast->last_token = token_copy(term2->last_token);
+    ast->first_token = term->first_token;
+    ast->last_token = term2->last_token;
     term = ast;
   }
   
   return term;
 }
 
-Operator term_operator(token *t) {
-  if (!t) { return 0; }
-
-  switch (t->type) {
+Operator term_operator(Token t) {
+  switch (t.type) {
   case T_PL: return O_PL;
   case T_MI: return O_MI;
   default:
@@ -260,30 +233,30 @@ Operator term_operator(token *t) {
   }
 }
 
-AST *parse_term(lexer *lexer) {
+AST *parse_term(Lexer *lexer) {
   AST *factor = parse_factor(lexer);
   Operator op = 0;
 
-  while (lexer_peek(lexer) && (op = term_operator(lexer_peek(lexer)))) {
-    token_destroy(lexer_pop(lexer));
+  while (lexer_peek(lexer).type != T_IV && 
+    (op = term_operator(lexer_peek(lexer)))) 
+  {
+    lexer_pop(lexer);
     AST *factor2 = parse_factor(lexer);
     AST *ast = ast_new();
     ast->type = AST_BINARY;
     ast->binary_expression.operator = op;
     ast->binary_expression.left = factor;
     ast->binary_expression.right = factor2;
-    ast->first_token = token_copy(factor->first_token);
-    ast->last_token = token_copy(factor2->last_token);
+    ast->first_token = factor->first_token;
+    ast->last_token = factor2->last_token;
     factor = ast;
   }
   
   return factor;
 }
 
-Operator factor_operator(token *t) {
-  if (!t) { return 0; }
-
-  switch (t->type) {
+Operator factor_operator(Token t) {
+  switch (t.type) {
   case T_MU: return O_MU;
   case T_DI: return O_DI;
   default:
@@ -291,85 +264,83 @@ Operator factor_operator(token *t) {
   }
 }
 
-AST *parse_factor(lexer *lexer) {
+AST *parse_factor(Lexer *lexer) {
   AST *atom = parse_atom(lexer);
   Operator op = 0;
-  while (lexer_peek(lexer) && (op = factor_operator(lexer_peek(lexer)))) {
-    token_destroy(lexer_pop(lexer));
+  while (lexer_peek(lexer).type != T_IV 
+    && (op = factor_operator(lexer_peek(lexer)))) 
+  {
+    lexer_pop(lexer);
     AST *atom2 = parse_atom(lexer);
     AST *ast = ast_new();
     ast->type = AST_BINARY;
     ast->binary_expression.operator = op;
     ast->binary_expression.left = atom;
     ast->binary_expression.right = atom2;
-    ast->first_token = token_copy(atom->first_token);
-    ast->last_token = token_copy(atom2->last_token);
+    ast->first_token = atom->first_token;
+    ast->last_token = atom2->last_token;
     atom = ast;
   }
   return atom;
 }
 
-AST *parse_atom(lexer *lexer) {
+AST *parse_atom(Lexer *lexer) {
   if (!lexer) { return NULL; }
 
-  token *t = lexer_peek(lexer);
+  Token t = lexer_peek(lexer);
 
-  if (token_is_invalid(t)) {
-      log_parserr(t, "Invalid token: %s\n", t->text);
+  if (t.type == T_IV) {
+      log_parserr(t, "Invalid token: %s\n", t.text);
       return NULL;
   }
 
   AST *ast = NULL;
-  token *first_token = NULL;
+  Token first_token = {0};
   
-  switch (t->type) {
+  switch (t.type) {
   case T_NU:
     ast = parse_atom_number(t);
-    token_destroy(lexer_pop(lexer));
+    lexer_pop(lexer);
     return ast;
   case T_ID:
     ast = parse_atom_symbol(t);
-    token_destroy(lexer_pop(lexer));
+    lexer_pop(lexer);
     return ast;
   case T_IF:
-    first_token = token_copy(t);
-    token_destroy(lexer_pop(lexer));
+    first_token = t;
+    lexer_pop(lexer);
     ast = parse_atom_if(lexer, first_token);
     return ast;
   case T_LP:
-    token_destroy(lexer_pop(lexer));
+    lexer_pop(lexer);
     ast = parse_expression(lexer);
     t = lexer_pop(lexer);
-    if (!(t && t->type == T_RP)) {
+    if (t.type != T_RP) {
       log_parserr(t, "Expected ')'\n");
-      token_destroy(t);
       ast_destroy(&ast);
       return NULL;
     }
-    token_destroy(t);
     return ast;
   default:
-    log_parserr(t, "Unexpected token of type %d: \"%s\"\n", t->type, t->text);
+    log_parserr(t, "Unexpected token of type %d: \"%s\"\n", t.type, t.text);
     return NULL;
   }
 }
 
-AST *parse_atom_if(lexer *lexer, token *first_token) {
+AST *parse_atom_if(Lexer *lexer, Token first_token) {
   AST *condition = parse_expression(lexer);
   
   if (!condition) {
     return NULL;
   }
 
-  token *t_then = lexer_pop(lexer);
+  Token t_then = lexer_pop(lexer);
 
-  if (t_then == NULL || t_then->type != T_TN) {
+  if (t_then.type != T_TN) {
     log_parserr(t_then, "Expected 'then' after if condition\n");
     ast_destroy(&condition);
     return NULL;
   }
-
-  token_destroy(t_then);
 
   AST *consequence = parse_expression(lexer);
 
@@ -378,17 +349,14 @@ AST *parse_atom_if(lexer *lexer, token *first_token) {
     return NULL;
   }
 
-  token *t_else = lexer_pop(lexer);
+  Token t_else = lexer_pop(lexer);
 
-  if (t_else == NULL || t_else->type != T_EL) {
+  if (t_else.type != T_EL) {
       log_parserr(t_else, "Expected 'else' after if consequence\n");
-      token_destroy(t_else);
       ast_destroy(&condition);
       ast_destroy(&consequence);
       return NULL;
   }
-
-  token_destroy(t_else);
 
   AST *alternative = parse_expression(lexer);
 
@@ -398,7 +366,7 @@ AST *parse_atom_if(lexer *lexer, token *first_token) {
     return NULL;
   }
 
-  token *last_token = token_copy(consequence->last_token);
+  Token last_token = consequence->last_token;
   AST *ast = ast_new();
 
   ast->type = AST_IF;
@@ -411,30 +379,30 @@ AST *parse_atom_if(lexer *lexer, token *first_token) {
   return ast;
 }
 
-AST *parse_atom_symbol(token *t) {
+AST *parse_atom_symbol(Token t) {
   AST *ast = ast_new();
 
   ast->type = AST_SYMBOL;
-  strncpy(ast->symbol, t->text, sizeof(ast->symbol));
-  ast->first_token = token_copy(t);
-  ast->last_token = token_copy(t);
+  strncpy(ast->symbol, t.text, sizeof(ast->symbol));
+  ast->first_token = t;
+  ast->last_token = t;
 
   return ast;
 }
 
-AST *parse_atom_number(token *t) {
+AST *parse_atom_number(Token t) {
   long number = 0;
 
-  if (!ascii_to_long(t->text, &number)) {
-      log_parserr(t, "Invalid number: %s\n", t->text);
+  if (!ascii_to_long(t.text, &number)) {
+      log_parserr(t, "Invalid number: %s\n", t.text);
       return NULL;
   }
 
   AST *ast = ast_new();
   ast->type = AST_NUMBER;
   ast->number = number;
-  ast->first_token = token_copy(t);
-  ast->last_token = token_copy(t);
+  ast->first_token = t;
+  ast->last_token = t;
 
   return ast;
 }

@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include "stream.h"
-#include "queue.h"
 
 typedef enum {
 	T_IV,
@@ -23,32 +22,29 @@ typedef enum {
 	T_TN,
 	T_EL,
   T_VL
-} token_type;
+} TokenType;
 
 typedef struct {
-	token_type type;
-	char text[8];
+	TokenType type;
+	char text[64];
 	int line;
 	int column;
-} token;
+} Token;
 
 typedef struct {
-	Stream *input;
-	Queue *buffer;
-} lexer;
+	int capacity;
+	Token *tokens;
+	int token_count;
+	int current_token;
+} Lexer;
 
-token *token_copy(token*);
-int token_destroy(token*);
+Lexer *lexer_open_file(const char *filename);
+Lexer *lexer_from_file(FILE *file);
+Lexer *lexer_from_expression(const char *expression);
 
-lexer *lexer_open_file(const char *filename);
-lexer *lexer_from_file(FILE *file);
-lexer *lexer_from_expression(const char *expression);
+int lexer_destroy(Lexer**);
 
-int lexer_destroy(lexer**);
-
-token *lexer_peek(lexer*);
-token *lexer_pop(lexer*);
-
-int token_is_invalid(token*);
+Token lexer_peek(Lexer*);
+Token lexer_pop(Lexer*);
 
 #endif

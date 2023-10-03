@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-//#define SET_ERROR(ast, message) fprintf(stderr, "type error in line %d, column %d: %s\n", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1, message);
-#define SET_ERROR(ast, message) snprintf(ERROR_BUFFER, sizeof(ERROR_BUFFER), "type error in line %d, column %d: %s\n", (ast)->first_token ? (ast)->first_token->line + 1 : -1, (ast)->first_token ? (ast)->first_token->column + 1 : -1, message);
+#define SET_ERROR(ast, message) snprintf(ERROR_BUFFER, sizeof(ERROR_BUFFER), "type error in line %d, column %d: %s\n", (ast)->first_token.line + 1, (ast)->first_token.column + 1, message);
 #define CLEAR_ERROR() ERROR_BUFFER[0] = '\0';
 
 static const Type TYPE_UNDEFINED = {0};

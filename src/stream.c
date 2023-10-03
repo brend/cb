@@ -98,7 +98,7 @@ int stream_consume_whitespace(Stream *s) {
 }
 
 int stream_peek_char(Stream *s, char *c) {
-	if (!(s && c)) { return 0; }
+	if (!s) { return 0; }
 
 	stream_has_prefix(s, " ");
 	if (queue_is_empty(s->buffer)) { return 0; }

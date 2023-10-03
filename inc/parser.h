@@ -54,8 +54,8 @@ typedef struct AST_SEQUENCE {
 
 typedef struct AST {
     AST_TYPE type;
-    token *first_token;
-    token *last_token;
+    Token first_token;
+    Token last_token;
     union {
       long number;
       char symbol[64];
