@@ -77,9 +77,20 @@ int ast_destroy(AST **ast) {
   return 1;
 }
 
+int consume_expected_token(Lexer *lexer, TokenType type, Token *token, const char *message) {
+  Token t = lexer_pop(lexer);
+  if (!teq(t, type)) {
+    log_parserr(t, "expected: %s, found: %d\n", message, type);
+    return 0;
+  }
+  if (token) {
+    *token = t;
+  }
+  return 1;
+}
+
 AST *parse(Lexer *lexer) {
     if (!lexer) { return NULL; }
-    
     return parse_sequence(lexer);
 }
 
@@ -147,30 +158,17 @@ AST *parse_expression_statement(Lexer *lexer) {
 }
 
 AST *parse_assignment(Lexer *lexer) {
-  Token t_val = lexer_pop(lexer);
-  if (!teq(t_val, T_VL)) {
-    log_parserr(t_val, "internal error: expected \"val\"");
-    return NULL;
-  }
+  Token t_val = {0};
+  Token t_id = {0};
 
-  Token t_id = lexer_pop(lexer);
-  
-  if (!teq(t_id, T_ID)) {
-    log_parserr(t_id, "expected: identifier");
-    return NULL;
-  }
-
-  Token t_eq = lexer_pop(lexer);
-
-  if (!teq(t_eq, T_EQ)) {
-    log_parserr(t_eq, "expected: \"=\"");
-    return NULL;
-  }
+  if (!consume_expected_token(lexer, T_VL, &t_val, "val")) { return NULL; }
+  if (!consume_expected_token(lexer, T_ID, &t_id, "identifier")) { return NULL; }
+  if (!consume_expected_token(lexer, T_EQ, NULL, "\"=\"")) { return NULL; }
 
   AST *expression = parse_expression(lexer);
 
   if (!expression) {
-    log_parserr(t_eq, "failed to parse assignment expression");
+    log_parserr(t_id, "failed to parse assignment expression");
     return NULL;
   }
 
@@ -286,40 +284,31 @@ AST *parse_factor(Lexer *lexer) {
 AST *parse_atom(Lexer *lexer) {
   if (!lexer) { return NULL; }
 
-  Token t = lexer_peek(lexer);
-
-  if (!tvalid(t)) {
-      log_parserr(t, "Invalid token: %s\n", t.text);
-      return NULL;
-  }
-
+  Token t = lexer_pop(lexer);
   AST *ast = NULL;
   Token first_token = {0};
   
   switch (t.type) {
   case T_NU:
     ast = parse_atom_number(t);
-    lexer_pop(lexer);
     return ast;
   case T_ID:
     ast = parse_atom_symbol(t);
-    lexer_pop(lexer);
     return ast;
   case T_IF:
     first_token = t;
-    lexer_pop(lexer);
     ast = parse_atom_if(lexer, first_token);
     return ast;
   case T_LP:
-    lexer_pop(lexer);
     ast = parse_expression(lexer);
-    t = lexer_pop(lexer);
-    if (!teq(t, T_RP)) {
-      log_parserr(t, "Expected ')'\n");
+    if (!consume_expected_token(lexer, T_RP, NULL, "')'")) {
       ast_destroy(&ast);
       return NULL;
     }
     return ast;
+  case T_IV:
+    log_parserr(t, "Invalid token: \"%s\"\n", t.text);
+    return NULL;
   default:
     log_parserr(t, "Unexpected token of type %d: \"%s\"\n", t.type, t.text);
     return NULL;
@@ -333,10 +322,7 @@ AST *parse_atom_if(Lexer *lexer, Token first_token) {
     return NULL;
   }
 
-  Token t_then = lexer_pop(lexer);
-
-  if (!teq(t_then, T_TN)) {
-    log_parserr(t_then, "Expected 'then' after if condition\n");
+  if (!consume_expected_token(lexer, T_TN, NULL, "'then'")) {
     ast_destroy(&condition);
     return NULL;
   }
@@ -348,13 +334,10 @@ AST *parse_atom_if(Lexer *lexer, Token first_token) {
     return NULL;
   }
 
-  Token t_else = lexer_pop(lexer);
-
-  if (!teq(t_else, T_EL)) {
-      log_parserr(t_else, "Expected 'else' after if consequence\n");
-      ast_destroy(&condition);
-      ast_destroy(&consequence);
-      return NULL;
+  if (!consume_expected_token(lexer, T_EL, NULL, "'else'")) {
+    ast_destroy(&condition);
+    ast_destroy(&consequence);
+    return NULL;
   }
 
   AST *alternative = parse_expression(lexer);
