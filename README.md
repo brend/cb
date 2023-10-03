@@ -46,3 +46,29 @@ Executed without any arguments, `cb` will read from standard input.
 $ echo "17 + 4" | cb
 21
 ```
+
+## what does it do
+
+Evaluation of expressions
+
+```
+$ cb -e "17 + 4"
+21
+```
+
+Conditionals
+
+```
+$ cb -e "if 1 > 2 then 0 else 1"
+1
+```
+
+Value declarations
+
+```
+$ cb
+  let x = 17
+  let y = 4
+  let z = x + y
+21
+```
