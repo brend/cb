@@ -19,7 +19,11 @@ Lexer *lexer_new(Stream *input)
   lexer->token_count = 0;
   lexer->current_token = 0;
 
-  if (lexer_tokenize_stream(lexer, input))
+  int tokenize_success = lexer_tokenize_stream(lexer, input);
+
+  stream_destroy(&input);
+
+  if (tokenize_success)
   {
     return lexer;
   }
@@ -32,28 +36,19 @@ Lexer *lexer_new(Stream *input)
 
 Lexer *lexer_open_file(const char *filename)
 {
-  if (!filename)
-  {
-    return NULL;
-  }
+  if (!filename) { return NULL; }
   return lexer_new(stream_open_file(filename));
 }
 
 Lexer *lexer_from_file(FILE *file)
 {
-  if (!file)
-  {
-    return NULL;
-  }
+  if (!file) { return NULL; }
   return lexer_new(stream_from_file(file));
 }
 
 Lexer *lexer_from_expression(const char *expression)
 {
-  if (!expression)
-  {
-    return NULL;
-  }
+  if (!expression) { return NULL; }
   return lexer_new(stream_from_string(expression));
 }
 
