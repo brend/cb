@@ -151,21 +151,21 @@ AST *parse_expression_statement(Lexer *lexer) {
 
 AST *parse_assignment(Lexer *lexer) {
   Token t_val = lexer_pop(lexer);
-  if (t_val.type != T_VL) {
+  if (!teq(t_val, T_VL)) {
     log_parserr(t_val, "internal error: expected \"val\"");
     return NULL;
   }
 
   Token t_id = lexer_pop(lexer);
   
-  if (t_id.type != T_ID) {
+  if (!teq(t_id, T_ID)) {
     log_parserr(t_id, "expected: identifier");
     return NULL;
   }
 
   Token t_eq = lexer_pop(lexer);
 
-  if (t_eq.type != T_EQ) {
+  if (!teq(t_eq, T_EQ)) {
     log_parserr(t_eq, "expected: \"=\"");
     return NULL;
   }
@@ -269,8 +269,8 @@ Operator factor_operator(Token t) {
 AST *parse_factor(Lexer *lexer) {
   AST *atom = parse_atom(lexer);
   Operator op = 0;
-  while (lexer_peek(lexer).type != T_IV 
-    && (op = factor_operator(lexer_peek(lexer)))) 
+  while (tvalid(lexer_peek(lexer)) &&
+    (op = factor_operator(lexer_peek(lexer)))) 
   {
     lexer_pop(lexer);
     AST *atom2 = parse_atom(lexer);
@@ -317,7 +317,7 @@ AST *parse_atom(Lexer *lexer) {
     lexer_pop(lexer);
     ast = parse_expression(lexer);
     t = lexer_pop(lexer);
-    if (t.type != T_RP) {
+    if (!teq(t, T_RP)) {
       log_parserr(t, "Expected ')'\n");
       ast_destroy(&ast);
       return NULL;
@@ -338,7 +338,7 @@ AST *parse_atom_if(Lexer *lexer, Token first_token) {
 
   Token t_then = lexer_pop(lexer);
 
-  if (t_then.type != T_TN) {
+  if (!teq(t_then, T_TN)) {
     log_parserr(t_then, "Expected 'then' after if condition\n");
     ast_destroy(&condition);
     return NULL;
@@ -353,7 +353,7 @@ AST *parse_atom_if(Lexer *lexer, Token first_token) {
 
   Token t_else = lexer_pop(lexer);
 
-  if (t_else.type != T_EL) {
+  if (!teq(t_else, T_EL)) {
       log_parserr(t_else, "Expected 'else' after if consequence\n");
       ast_destroy(&condition);
       ast_destroy(&consequence);

@@ -6,6 +6,7 @@
 #include "ast.h"
 
 int tvalid(Token);
+int teq(Token, TokenType);
 
 Lexer *lexer_open_file(const char *filename);
 Lexer *lexer_from_file(FILE *file);

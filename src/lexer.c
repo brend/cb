@@ -177,6 +177,10 @@ Token lexer_pop(Lexer *lexer)
   }
 }
 
-int tvalid(Token t) {
+inline int tvalid(Token t) {
   return t.type != T_IV;
+}
+
+inline int teq(Token token, TokenType type) {
+  return token.type == type;
 }
