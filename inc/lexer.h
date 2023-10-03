@@ -38,6 +38,8 @@ typedef struct {
 	int current_token;
 } Lexer;
 
+int tvalid(Token);
+
 Lexer *lexer_open_file(const char *filename);
 Lexer *lexer_from_file(FILE *file);
 Lexer *lexer_from_expression(const char *expression);

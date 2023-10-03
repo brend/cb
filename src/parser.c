@@ -115,7 +115,7 @@ AST *parse_sequence(Lexer *lexer) {
 
   AST *statement = NULL;
 
-  while (lexer_peek(lexer).type != T_IV) {
+  while (tvalid(lexer_peek(lexer))) {
     statement = parse_statement(lexer);
     if (!ast->sequence) {
       ast->sequence = malloc(sizeof(AST_SEQUENCE));
@@ -208,7 +208,9 @@ AST *parse_comparison(Lexer *lexer) {
   AST *term = parse_term(lexer);
   Operator op = 0;
 
-  while (lexer_peek(lexer).type != T_IV && (op = comparison_operator(lexer_peek(lexer)))) {
+  while (tvalid(lexer_peek(lexer)) && 
+    (op = comparison_operator(lexer_peek(lexer)))) 
+  {
     lexer_pop(lexer);
     AST *term2 = parse_term(lexer);
     AST *ast = ast_new();
@@ -237,7 +239,7 @@ AST *parse_term(Lexer *lexer) {
   AST *factor = parse_factor(lexer);
   Operator op = 0;
 
-  while (lexer_peek(lexer).type != T_IV && 
+  while (tvalid(lexer_peek(lexer)) && 
     (op = term_operator(lexer_peek(lexer)))) 
   {
     lexer_pop(lexer);
@@ -289,7 +291,7 @@ AST *parse_atom(Lexer *lexer) {
 
   Token t = lexer_peek(lexer);
 
-  if (t.type == T_IV) {
+  if (!tvalid(t)) {
       log_parserr(t, "Invalid token: %s\n", t.text);
       return NULL;
   }

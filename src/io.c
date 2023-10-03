@@ -76,7 +76,7 @@ void print_tokens_from_file(FILE *file) {
   Lexer *lexer = lexer_from_file(file);
   Token token;
 
-  while ((token = lexer_pop(lexer)).type != T_IV) {
+  while (tvalid(token = lexer_pop(lexer))) {
     print_token(&token);
     printf("\n");
   }
@@ -88,7 +88,7 @@ void print_tokens_from_expression(char *expression) {
   Lexer *lexer = lexer_from_expression(expression);
   Token token;
   
-  while ((token = lexer_pop(lexer)).type != T_IV) {
+  while (tvalid(token = lexer_pop(lexer))) {
     print_token(&token);
     printf("\n");
   }
