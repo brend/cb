@@ -3,15 +3,15 @@
     "configurations": [
         {
             "name": "Debug",
-            "type": "cppdbg",
+            "type": "lldb-vscode",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/nl",
+            "program": "${workspaceFolder}/bin/cb",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb",
+            "MIMode": "lldb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
