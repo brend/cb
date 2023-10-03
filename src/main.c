@@ -79,7 +79,7 @@ int evaluate_file(Options *opt, FILE *file) {
   
   const char *type_error = typecheck_last_error();
 
-  if (type_error) {
+  if (type_error && type_error[0] != '\0') {
     fprintf(stderr, "%s\n", type_error);
   }  
 
