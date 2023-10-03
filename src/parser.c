@@ -145,11 +145,8 @@ AST *parse_sequence(Lexer *lexer) {
 
 AST *parse_expression_statement(Lexer *lexer) {
   AST *expression = parse_expression(lexer);
-
   if (!expression) { return NULL; }
-
   AST *ast = ast_new();
-
   ast->type = AST_STMT_EXP;
   ast->first_token = expression->first_token;
   ast->last_token = expression->last_token;
@@ -184,7 +181,6 @@ AST *parse_assignment(Lexer *lexer) {
 
 AST *parse_expression(Lexer *lexer) {
   if (!lexer) { return NULL; }
-  
   return parse_comparison(lexer);
 }
 
@@ -315,48 +311,43 @@ AST *parse_atom(Lexer *lexer) {
   }
 }
 
-AST *parse_atom_if(Lexer *lexer, Token first_token) {
-  AST *condition = parse_expression(lexer);
-  
-  if (!condition) {
-    return NULL;
-  }
+AST *parse_atom_if_parts(
+  Lexer *lexer, 
+  Token first_token,
+  AST **condition,
+  AST **consequence,
+  AST **alternative
+) {
+  if (!(*condition = parse_expression(lexer))) { return NULL; }
+  if (!consume_expected_token(lexer, T_TN, NULL, "'then'")) { return NULL; }
+  if (!(*consequence = parse_expression(lexer))) { return NULL; }
+  if (!consume_expected_token(lexer, T_EL, NULL, "'else'")) { return NULL; }
+  if (!(*alternative = parse_expression(lexer))) { return NULL; }
 
-  if (!consume_expected_token(lexer, T_TN, NULL, "'then'")) {
-    ast_destroy(&condition);
-    return NULL;
-  }
-
-  AST *consequence = parse_expression(lexer);
-
-  if (!consequence) {
-    ast_destroy(&condition);
-    return NULL;
-  }
-
-  if (!consume_expected_token(lexer, T_EL, NULL, "'else'")) {
-    ast_destroy(&condition);
-    ast_destroy(&consequence);
-    return NULL;
-  }
-
-  AST *alternative = parse_expression(lexer);
-
-  if (!alternative) {
-    ast_destroy(&condition);
-    ast_destroy(&consequence);
-    return NULL;
-  }
-
-  Token last_token = consequence->last_token;
+  Token last_token = (*consequence)->last_token;
   AST *ast = ast_new();
 
   ast->type = AST_IF;
   ast->first_token = first_token;
   ast->last_token = last_token;
-  ast->if_statement.condition = condition;
-  ast->if_statement.consequence = consequence;
-  ast->if_statement.alternative = alternative;
+  ast->if_statement.condition = *condition;
+  ast->if_statement.consequence = *consequence;
+  ast->if_statement.alternative = *alternative;
+
+  return ast;
+}
+
+AST *parse_atom_if(Lexer *lexer, Token first_token) {
+  AST *condition = NULL;
+  AST *consequence = NULL;
+  AST *alternative = NULL;
+  AST *ast = parse_atom_if_parts(lexer, first_token, &condition, &consequence, &alternative);
+
+  if (!ast) {
+    ast_destroy(&condition);
+    ast_destroy(&consequence);
+    ast_destroy(&alternative);
+  }
 
   return ast;
 }
