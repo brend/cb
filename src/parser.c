@@ -5,9 +5,6 @@
 
 #define log_parserr(tk, ...) {fprintf(stderr, "error at %d:%d \"%s\": ", (tk).line, (tk).column, (tk).text); fprintf(stderr, __VA_ARGS__);}
 
-//#define log_debug(...) {printf("[%d] ", __LINE__); printf(__VA_ARGS__);}
-//int log_debug(const char *p, ...) { (void)p; return 0; }
-
 AST *parse_expression(Lexer *lexer);
 AST *parse_comparison(Lexer *lexer);
 AST *parse_term(Lexer *lexer);

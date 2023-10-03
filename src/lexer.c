@@ -5,8 +5,6 @@
 
 #define TOKEN_BUFFER_SIZE 1024
 
-static char ID_BUFFER[128];
-
 int lexer_tokenize_stream(Lexer *lexer, Stream *s);
 
 Lexer *lexer_new(Stream *input)
@@ -84,7 +82,7 @@ int lexer_destroy(Lexer **lexer)
 
 #define MATCHW(w, y)                           \
   {                                            \
-    if (strcmp(ID_BUFFER, (w)) == 0)           \
+    if (strcmp(t.text, (w)) == 0)               \
     {                                          \
       t.type = (y);                            \
       lexer->tokens[lexer->token_count++] = t; \
@@ -122,7 +120,7 @@ int lexer_tokenize_stream(Lexer *lexer, Stream *s)
     MATCH("(", T_LP);
     MATCH(")", T_RP);
 
-    if (!stream_consume_alphanum_prefix(s, ID_BUFFER, sizeof(ID_BUFFER)))
+    if (!stream_consume_alphanum_prefix(s, t.text, MAX_ID_SIZE))
     {
       return 0;
     }
@@ -132,9 +130,7 @@ int lexer_tokenize_stream(Lexer *lexer, Stream *s)
     MATCHW("else", T_EL);
     MATCHW("val", T_VL);
 
-    strcpy(t.text, ID_BUFFER);
-
-    if (ascii_to_long(ID_BUFFER, NULL))
+    if (ascii_to_long(t.text, NULL))
     {
       t.type = T_NU;
     }

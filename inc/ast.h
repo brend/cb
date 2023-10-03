@@ -30,14 +30,16 @@ typedef struct {
  * LEXICAL ANALYSIS
 */
 
+#define MAX_ID_SIZE 64
+
 typedef enum {
 	T_IV,
 	T_PL,
 	T_MI,
-    T_MU,
-    T_DI,
-    T_EQ,
-    T_NE,
+  T_MU,
+  T_DI,
+  T_EQ,
+  T_NE,
 	T_GT,
 	T_LT,
 	T_LP,
@@ -52,7 +54,7 @@ typedef enum {
 
 typedef struct {
 	TokenType type;
-	char text[64];
+	char text[MAX_ID_SIZE];
 	int line;
 	int column;
 } Token;
